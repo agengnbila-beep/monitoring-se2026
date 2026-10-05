@@ -35,10 +35,10 @@
                     </h3>
 
                     <p>
-                        {{ number_format($dataset->rows) }}
+                        {{ number_format($dataset->row_count) }}
                         baris
                         •
-                        {{ $dataset->columns }}
+                        {{ $dataset->column_count }}
                         kolom
                     </p>
 

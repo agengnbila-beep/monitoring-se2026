@@ -25,8 +25,9 @@ class PageTest extends TestCase
         Dataset::create([
             'name' => 'Dataset Uji',
             'original_filename' => 'uji.xlsx',
-            'rows' => 100,
-            'columns' => 5,
+            'file_type' => 'xlsx',
+            'row_count' => 100,
+            'column_count' => 5,
             'status' => 'done',
         ]);
 

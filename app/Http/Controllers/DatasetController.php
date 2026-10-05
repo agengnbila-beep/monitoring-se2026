@@ -38,23 +38,16 @@ class DatasetController extends Controller
             $highestColumn
         );
 
-        $file->store(
-            'datasets',
-            'local'
-        );
+        $path = $file->store('datasets', 'local');
 
         Dataset::create([
-            'name' => pathinfo(
-                $originalName,
-                PATHINFO_FILENAME
-            ),
-
+            'name' => pathinfo($originalName, PATHINFO_FILENAME),
             'original_filename' => $originalName,
-
-            'rows' => $rows,
-
-            'columns' => $columns,
-
+            'file_path' => $path,
+            'file_type' => 'xlsx',
+            'file_size' => $file->getSize(),
+            'row_count' => $rows - 1,
+            'column_count' => $columns,
             'status' => 'done',
         ]);
 

@@ -12,16 +12,18 @@ class DatasetSeeder extends Seeder
         Dataset::create([
             'name' => 'Data Penduduk SE2026',
             'original_filename' => 'data-penduduk-se2026.xlsx',
-            'rows' => 10250,
-            'columns' => 12,
+            'file_type' => 'xlsx',
+            'row_count' => 10250,
+            'column_count' => 12,
             'status' => 'done',
         ]);
 
         Dataset::create([
             'name' => 'Data Wilayah',
             'original_filename' => 'data-wilayah.xlsx',
-            'rows' => 2450,
-            'columns' => 8,
+            'file_type' => 'xlsx',
+            'row_count' => 2450,
+            'column_count' => 8,
             'status' => 'done',
         ]);
     }

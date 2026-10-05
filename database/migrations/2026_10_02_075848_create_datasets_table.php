@@ -12,21 +12,22 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('datasets', function (Blueprint $table) {
-
             $table->id();
-
             $table->string('name');
-
-            $table->string('original_filename')->nullable();
-
-            $table->unsignedBigInteger('rows')->default(0);
-
-            $table->unsignedInteger('columns')->default(0);
-
-            $table->string('status')->default('pending');
-
+            $table->text('description')->nullable();
+            $table->string('original_filename');
+            $table->string('file_path')->nullable();
+            $table->string('file_type', 10);
+            $table->unsignedBigInteger('file_size')->default(0);
+            $table->string('sheet_name')->nullable();
+            $table->string('table_name')->nullable()->unique();
+            $table->string('status', 20)->default('pending')->index();
+            $table->text('error_message')->nullable();
+            $table->unsignedBigInteger('row_count')->default(0);
+            $table->unsignedInteger('column_count')->default(0);
+            $table->timestamp('profiled_at')->nullable();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
-
         });
     }
 
