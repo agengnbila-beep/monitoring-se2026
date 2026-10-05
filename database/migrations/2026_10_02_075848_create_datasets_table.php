@@ -10,25 +10,25 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-{
-    Schema::create('datasets', function (Blueprint $table) {
+    {
+        Schema::create('datasets', function (Blueprint $table) {
 
-        $table->id();
+            $table->id();
 
-        $table->string('name');
+            $table->string('name');
 
-        $table->string('original_filename')->nullable();
+            $table->string('original_filename')->nullable();
 
-        $table->unsignedBigInteger('rows')->default(0);
+            $table->unsignedBigInteger('rows')->default(0);
 
-        $table->unsignedInteger('columns')->default(0);
+            $table->unsignedInteger('columns')->default(0);
 
-        $table->string('status')->default('pending');
+            $table->string('status')->default('pending');
 
-        $table->timestamps();
+            $table->timestamps();
 
-    });
-}
+        });
+    }
 
     /**
      * Reverse the migrations.

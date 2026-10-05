@@ -17,11 +17,10 @@ Route::get('/data', function () {
     $datasets = Dataset::latest()->get();
 
     return view('data.index', [
-        'datasets' => $datasets
+        'datasets' => $datasets,
     ]);
 
 })->name('data');
-
 
 Route::post('/data/upload', [DatasetController::class, 'upload'])
     ->name('data.upload');
