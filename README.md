@@ -40,6 +40,6 @@ WAL mode aktif secara default lewat `.env`:
 
 ## Alur kerja
 
-- Satu issue = satu branch: `feat/<nomor>-<nama>` (contoh `feat/6-upload`)
-- Merge ke `main` lewat PR yang direview partner
+- Pengembangan langsung di branch `main`
+- Daftar tugas: `docs/issues/` (nomor issue dipakai di pesan commit, contoh `feat: upload CSV (#6)`)
 - Sebelum commit: `vendor/bin/pint --dirty` dan `php artisan test`
