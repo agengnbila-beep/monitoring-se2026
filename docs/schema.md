@@ -78,5 +78,7 @@ Unique: (`dataset_id`, `name`)
 | timestamps | | |
 
 ## Tabel data dinamis `ds_{id}`
-Dibuat oleh proses import (#7), bukan migration. Kolom = `dataset_columns.name`
-dengan tipe SQLite sesuai `type`, ditambah `_row_id INTEGER PRIMARY KEY`.
+Dibuat oleh proses import (#7), bukan migration.
+
+- `_row_id INTEGER PRIMARY KEY`: kolom sistem (alias `rowid` SQLite, auto increment tanpa index tambahan)
+- Kolom lain = `dataset_columns.name`, tipe SQLite sesuai `type`
