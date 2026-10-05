@@ -29,9 +29,11 @@
                     Dashboard
                 </a>
 
-                <a href="{{ route('data') }}">
-                    Data
-                </a>
+                @can('admin')
+                    <a href="{{ route('data') }}">
+                        Data
+                    </a>
+                @endcan
 
             </nav>
 
@@ -47,7 +49,12 @@
                 </h2>
 
                 <div class="user">
-                    Admin
+                    <span>{{ auth()->user()->name }} · {{ auth()->user()->role }}</span>
+
+                    <form method="POST" action="{{ route('logout') }}" class="logout-form">
+                        @csrf
+                        <button type="submit" class="outline-button">Keluar</button>
+                    </form>
                 </div>
 
             </header>

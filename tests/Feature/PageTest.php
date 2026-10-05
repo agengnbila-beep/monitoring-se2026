@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Dataset;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -17,21 +18,17 @@ class PageTest extends TestCase
 
     public function test_dashboard_page_loads(): void
     {
-        $this->get('/dashboard')->assertOk();
+        $this->actingAs(User::factory()->create())
+            ->get('/dashboard')
+            ->assertOk();
     }
 
     public function test_data_page_lists_datasets(): void
     {
-        Dataset::create([
-            'name' => 'Dataset Uji',
-            'original_filename' => 'uji.xlsx',
-            'file_type' => 'xlsx',
-            'row_count' => 100,
-            'column_count' => 5,
-            'status' => 'done',
-        ]);
+        Dataset::factory()->create(['name' => 'Dataset Uji']);
 
-        $this->get('/data')
+        $this->actingAs(User::factory()->admin()->create())
+            ->get('/data')
             ->assertOk()
             ->assertSee('Dataset Uji');
     }
