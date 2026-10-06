@@ -25,7 +25,7 @@
 
     <div class="dataset-list">
 
-        @foreach ($datasets as $dataset)
+        @forelse ($datasets as $dataset)
             <div class="dataset-card">
 
                 <div class="dataset-info">
@@ -35,11 +35,15 @@
                     </h3>
 
                     <p>
-                        {{ number_format($dataset->row_count) }}
-                        baris
-                        •
-                        {{ $dataset->column_count }}
-                        kolom
+                        @if ($dataset->status === 'pending')
+                            {{ strtoupper($dataset->file_type) }} • menunggu import
+                        @else
+                            {{ number_format($dataset->row_count) }}
+                            baris
+                            •
+                            {{ $dataset->column_count }}
+                            kolom
+                        @endif
                     </p>
 
                     <small>
@@ -65,21 +69,38 @@
 
                     </span>
 
+                    @if ($dataset->status === 'pending')
+                        <a href="{{ route('data.preview', $dataset) }}" class="outline-button">
+                            Pratinjau
+                        </a>
+                    @else
+                        <button type="button" class="outline-button">
+                            Overview
+                        </button>
+                    @endif
 
-                    <button class="outline-button">
-                        Overview
-                    </button>
+                    <form method="POST" action="{{ route('data.destroy', $dataset) }}"
+                        onsubmit="return confirm('Hapus dataset {{ $dataset->name }}?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="cancel-button">Hapus</button>
+                    </form>
 
                 </div>
 
             </div>
-        @endforeach
+        @empty
+            <div class="empty-state">
+                <h3>Belum ada dataset</h3>
+                <p>Klik "+ Upload Dataset" untuk menambahkan data pertama.</p>
+            </div>
+        @endforelse
 
     </div>
 
     <!-- Upload Modal -->
 
-    <div id="uploadModal" class="modal">
+    <div id="uploadModal" class="modal {{ $errors->has('file') ? 'active' : '' }}">
 
         <div class="modal-content">
 
@@ -89,7 +110,7 @@
                     <h2>Upload Dataset</h2>
 
                     <p>
-                        Upload file Excel untuk diproses.
+                        File CSV, XLSX, atau JSON (array of objects), maksimal 20 MB.
                     </p>
                 </div>
 
@@ -107,39 +128,22 @@
                 <div class="form-group">
 
                     <label for="datasetFile">
-                        File XLSX
+                        File
                     </label>
 
                     <label class="file-upload">
 
                         <span id="fileLabel">
-                            📄 Pilih File XLSX
+                            📄 Pilih file CSV, XLSX, atau JSON
                         </span>
 
-                        <input type="file" accept=".xlsx" id="datasetFile" name="file" required>
+                        <input type="file" accept=".csv,.xlsx,.json" id="datasetFile" name="file" required>
 
                     </label>
 
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="sheet">
-                        Sheet
-                    </label>
-
-                    <select id="sheet" name="sheet">
-
-                        <option value="0">
-                            Sheet1
-                        </option>
-
-                        <option value="1">
-                            Sheet2
-                        </option>
-
-                    </select>
+                    @error('file')
+                        <p class="form-error">{{ $message }}</p>
+                    @enderror
 
                 </div>
 

@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 fileLabel.textContent = "📄 " + file.name;
             } else {
-                fileLabel.textContent = "📄 Pilih File XLSX";
+                fileLabel.textContent = " Pilih file CSV, XLSX, atau JSON";
             }
         });
     }

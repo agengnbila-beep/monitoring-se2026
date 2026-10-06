@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Auth\LoginController as AuthLoginController;
 use App\Http\Controllers\DatasetController;
-use App\Models\Dataset;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
@@ -20,12 +19,10 @@ Route::middleware('auth')->group(function () {
     })->name('dashboard');
 
     Route::middleware('can:admin')->group(function () {
-        Route::get('/data', function () {
-            return view('data.index', [
-                'datasets' => Dataset::latest()->get(),
-            ]);
-        })->name('data');
-
-        Route::post('/data/upload', [DatasetController::class, 'upload'])->name('data.upload');
+        Route::get('/data', [DatasetController::class, 'index'])->name('data');
+        Route::post('/data/upload', [DatasetController::class, 'store'])->name('data.upload');
+        Route::get('/data/{dataset}/preview', [DatasetController::class, 'preview'])->name('data.preview');
+        Route::post('/data/{dataset}/confirm', [DatasetController::class, 'confirm'])->name('data.confirm');
+        Route::delete('/data/{dataset}', [DatasetController::class, 'destroy'])->name('data.destroy');
     });
 });

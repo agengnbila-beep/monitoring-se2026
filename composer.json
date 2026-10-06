@@ -10,8 +10,7 @@
         "halaxa/json-machine": "^1.2",
         "laravel/framework": "^13.17",
         "laravel/tinker": "^3.0",
-        "openspout/openspout": "^5.3",
-        "phpoffice/phpspreadsheet": "^5.10"
+        "openspout/openspout": "^5.3"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

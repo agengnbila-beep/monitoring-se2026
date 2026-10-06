@@ -3,59 +3,127 @@
 namespace App\Http\Controllers;
 
 use App\Models\Dataset;
+use App\Services\Import\DatasetPreview;
+use App\Services\Import\ReaderFactory;
+use App\Services\Import\XlsxReader;
+use Exception;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
-use PhpOffice\PhpSpreadsheet\IOFactory;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\View\View;
 
 class DatasetController extends Controller
 {
-    public function upload(Request $request)
+    public function index(): View
+    {
+        return view('data.index', [
+            'datasets' => Dataset::latest()->get(),
+        ]);
+    }
+
+    public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'file' => [
-                'required',
-                'file',
-                'mimes:xlsx',
-                'max:10240',
-            ],
+            'file' => ['required', 'file', 'extensions:csv,xlsx,json', 'max:20480'],
+        ], [
+            'file.extensions' => 'Format file harus CSV, XLSX, atau JSON.',
+            'file.max' => 'Ukuran file maksimal 20 MB.',
         ]);
 
         $file = $request->file('file');
+        $type = strtolower($file->getClientOriginalExtension());
 
-        $originalName = $file->getClientOriginalName();
-
-        $spreadsheet = IOFactory::load(
-            $file->getRealPath()
-        );
-
-        $sheet = $spreadsheet->getActiveSheet();
-
-        $rows = $sheet->getHighestRow();
-
-        $highestColumn = $sheet->getHighestColumn();
-
-        $columns = Coordinate::columnIndexFromString(
-            $highestColumn
-        );
-
-        $path = $file->store('datasets', 'local');
-
-        Dataset::create([
-            'name' => pathinfo($originalName, PATHINFO_FILENAME),
-            'original_filename' => $originalName,
-            'file_path' => $path,
-            'file_type' => 'xlsx',
+        $dataset = Dataset::create([
+            'name' => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
+            'original_filename' => $file->getClientOriginalName(),
+            'file_path' => $file->storeAs('uploads', Str::uuid().'.'.$type, 'local'),
+            'file_type' => $type,
             'file_size' => $file->getSize(),
-            'row_count' => $rows - 1,
-            'column_count' => $columns,
-            'status' => 'done',
+            'status' => 'pending',
+            'created_by' => $request->user()->id,
         ]);
 
-        return redirect()
-            ->route('data')
-            ->with(
-                'success',
-                'Dataset berhasil diupload.'
+        return redirect()->route('data.preview', $dataset);
+    }
+
+    public function preview(Request $request, Dataset $dataset): View
+    {
+        abort_unless($dataset->status === 'pending', 404);
+
+        $sheets = [];
+        $sheet = null;
+        $preview = ['headers' => [], 'rows' => []];
+        $error = null;
+
+        try {
+            $sheets = $this->sheetsOf($dataset);
+            $sheet = $request->query('sheet', $dataset->sheet_name ?? $sheets[0] ?? null);
+
+            $preview = DatasetPreview::make(
+                ReaderFactory::make($this->pathOf($dataset), $dataset->file_type, $sheet)
             );
+
+            if ($preview['headers'] === []) {
+                $error = 'File tidak berisi data.';
+            }
+        } catch (Exception $e) {
+            $error = 'File tidak bisa dibaca: '.$e->getMessage();
+        }
+
+        return view('data.preview', compact('dataset', 'sheets', 'sheet', 'preview', 'error'));
+    }
+
+    public function confirm(Request $request, Dataset $dataset): RedirectResponse
+    {
+        abort_unless($dataset->status === 'pending', 404);
+
+        $sheets = $this->sheetsOf($dataset);
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'sheet' => $sheets === [] ? ['prohibited'] : ['required', Rule::in($sheets)],
+        ]);
+
+        $dataset->update([
+            'name' => $validated['name'],
+            'sheet_name' => $validated['sheet'] ?? null,
+        ]);
+
+        // #7: proses import dijalankan dari sini lewat queue.
+
+        return redirect()->route('data')
+            ->with('success', "Dataset \"{$dataset->name}\" siap diimpor.");
+    }
+
+    public function destroy(Dataset $dataset): RedirectResponse
+    {
+        if ($dataset->savedQueries()->exists()) {
+            return back()->with('error', 'Dataset tidak bisa dihapus karena masih dipakai saved query.');
+        }
+
+        if ($dataset->file_path !== null) {
+            Storage::disk('local')->delete($dataset->file_path);
+        }
+
+        $dataset->delete();
+
+        return redirect()->route('data')->with('success', 'Dataset dihapus.');
+    }
+
+    private function pathOf(Dataset $dataset): string
+    {
+        return Storage::disk('local')->path($dataset->file_path);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function sheetsOf(Dataset $dataset): array
+    {
+        return $dataset->file_type === 'xlsx'
+            ? (new XlsxReader($this->pathOf($dataset)))->sheetNames()
+            : [];
     }
 }

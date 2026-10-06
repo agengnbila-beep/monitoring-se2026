@@ -627,3 +627,96 @@ button {
 .logout-form {
     margin: 0;
 }
+
+.alert {
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.alert-success {
+    background: #ecfdf5;
+    color: #047857;
+}
+
+.alert-error {
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+.form-error {
+    color: #b91c1c;
+    font-size: 13px;
+    margin-top: 6px;
+}
+
+.dataset-action form {
+    margin: 0;
+}
+
+a.outline-button {
+    text-decoration: none;
+    display: inline-block;
+}
+
+/* ===== Pratinjau ===== */
+.preview-sheet {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.preview-sheet select,
+.preview-confirm input[type="text"] {
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.preview-confirm input[type="text"] {
+    width: 100%;
+    max-width: 420px;
+}
+
+.table-scroll {
+    overflow-x: auto;
+    background: #fff;
+}
+
+.table-scroll {
+    overflow-x: auto;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 24px;
+}
+
+.preview-table {
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 100%;
+}
+
+.preview-table th,
+.preview-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #f3f4f6;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.preview-table th {
+    background: #f9fafb;
+    font-weight: 600;
+}
+
+.preview-confirm {
+    margin-bottom: 16px;
+}
+
+.preview-cancel {
+    margin-top: 8px;
+}
