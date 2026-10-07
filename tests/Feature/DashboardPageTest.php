@@ -25,6 +25,30 @@ class DashboardPageTest extends TestCase
             ->assertSee('"data_url":"'.str_replace('/', '\/', route('api.widgets.data', $widget)).'"', false);
     }
 
+    public function test_admin_gets_editor_controls(): void
+    {
+        $dashboard = Dashboard::factory()->create();
+
+        $this->actingAs(User::factory()->admin()->create())
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertSee('id="dashEditToggle"', false)
+            ->assertSee('data-can-edit="1"', false)
+            ->assertSee('data-widget-store-url="'.route('api.widgets.store', $dashboard).'"', false);
+    }
+
+    public function test_viewer_gets_no_editor_controls(): void
+    {
+        Dashboard::factory()->create();
+
+        $this->actingAs(User::factory()->create())
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertDontSee('dashEditToggle')
+            ->assertDontSee('data-can-edit')
+            ->assertDontSee('dashCreate');
+    }
+
     public function test_dashboard_is_opened_by_slug(): void
     {
         Dashboard::factory()->create(['name' => 'A Dashboard']);

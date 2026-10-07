@@ -180,6 +180,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Dimuat terpisah agar ECharts (±550 KB) hanya diunduh di laman dashboard.
     if (dashboardRoot) {
-        import("./dashboard").then(({ initDashboard }) => initDashboard(dashboardRoot));
+        import("./dashboard").then(({ initDashboard }) => {
+            const view = initDashboard(dashboardRoot);
+
+            if (dashboardRoot.dataset.canEdit) {
+                import("./dashboard-editor").then(({ initDashboardEditor }) => initDashboardEditor(dashboardRoot, view));
+            }
+        });
+    }
+
+    const dashCreate = document.getElementById("dashCreate");
+
+    if (dashCreate) {
+        import("./dashboard-editor").then(({ initDashboardCreate }) => initDashboardCreate(dashCreate));
     }
 });

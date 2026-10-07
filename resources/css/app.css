@@ -160,16 +160,37 @@ button {
 /* RESPONSIVE */
 
 @media (max-width: 768px) {
+        /* Di layar kecil sidebar menjadi bar navigasi di atas. */
+    .app {
+        flex-direction: column;
+    }
+
     .sidebar {
-        width: 70px;
+        width: 100%;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        overflow-x: auto;
     }
 
     .logo {
-        font-size: 0;
+        font-size: 18px;
+        padding: 0;
+    }
+
+    .sidebar nav {
+        flex-direction: row;
+        gap: 4px;
     }
 
     .sidebar a {
-        font-size: 0;
+        padding: 8px 10px;
+        white-space: nowrap;
+    }
+
+    .topbar {
+        padding: 0 20px;
     }
 
     .content {
@@ -1010,4 +1031,77 @@ button:disabled {
     .widget-card {
         grid-column: span 12;
     }
+}
+
+/* ===== Builder dashboard ===== */
+.dashboard-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.dash-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.dash-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    color: #4b5563;
+    margin-bottom: 12px;
+}
+
+.dash-options {
+    border-top: 1px solid #f3f4f6;
+    padding-top: 14px;
+    margin-bottom: 8px;
+}
+
+.dash-card-controls {
+    display: none;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed #d1d5db;
+}
+
+.dash-card-controls button,
+.dash-card-controls select {
+    padding: 6px 10px;
+    font-size: 12px;
+}
+
+.editing .dash-card-controls {
+    display: flex;
+}
+
+.editing .widget-card {
+    border-style: dashed;
+    border-color: #a5b4fc;
+}
+
+@media (max-width: 768px) {
+    .page-header.data-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .widget-card {
+        padding: 14px;
+    }
+
+    .kpi-value {
+        font-size: 40px;
+    }
+}
+
+.dash-options .dash-field select {
+    max-width: 420px;
 }
