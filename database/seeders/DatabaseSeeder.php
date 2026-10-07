@@ -25,6 +25,6 @@ class DatabaseSeeder extends Seeder
             'email' => 'viewer@se2026.test',
         ]);
 
-        $this->call(DatasetSeeder::class);
+        $this->call([DatasetSeeder::class, DashboardSeeder::class]);
     }
 }

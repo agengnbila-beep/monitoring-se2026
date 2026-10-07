@@ -171,7 +171,45 @@ Cache otomatis tidak terpakai lagi saat dataset diimpor ulang atau kolomnya diub
 | `pie` | `{ "label": "kecamatan", "value": "jumlah" }` |
 | `table` | `{ "columns": ["kecamatan", "jumlah"] }` |
 
-Nilai di `options` merujuk ke `columns[].name` pada hasil query.
+Nilai di `options` merujuk ke `columns[].name` pada hasil query; kolom yang tidak ada
+ditolak (422, key `options.*`). Key lain dibuang; default `format: "number"`, `stacked: false`,
+dan `columns` tabel = semua kolom hasil.
+
+## 6a. Dashboard dan widget
+
+Baca (semua user login): `GET /api/dashboards`, `GET /api/dashboards/{id}`,
+`GET /api/widgets/{id}/data` (format sama dengan bagian 5).
+Tulis (admin): `POST/PUT/DELETE /api/dashboards[/{id}]`,
+`POST /api/dashboards/{id}/widgets`, `PUT/DELETE /api/widgets/{id}`.
+
+```json
+{
+  "data": {
+    "id": 1,
+    "name": "Monitoring SE2026",
+    "slug": "monitoring-se2026",
+    "description": null,
+    "filters": [{ "key": "kecamatan", "label": "Kecamatan", "type": "select" }],
+    "widgets": [
+      {
+        "id": 1,
+        "dashboard_id": 1,
+        "saved_query_id": 2,
+        "title": "KRT per kecamatan",
+        "chart_type": "bar",
+        "options": { "x": "kecamatan", "y": ["jumlah_krt"], "stacked": false },
+        "sort_order": 1,
+        "width": 8,
+        "data_url": "https://…/api/widgets/1/data"
+      }
+    ],
+    "updated_at": "2026-10-07T10:00:00+07:00"
+  }
+}
+```
+
+Body widget: `{ "saved_query_id", "title", "chart_type", "options", "sort_order"?, "width"? (1–12) }`.
+Menghapus dashboard ikut menghapus widget-nya; saved query tetap ada.
 
 ## 7. Filter global (`dashboards.filters`)
 

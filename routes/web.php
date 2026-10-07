@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\Api\DashboardController as ApiDashboardController;
 use App\Http\Controllers\Api\DatasetController as ApiDatasetController;
 use App\Http\Controllers\Api\SavedQueryController;
+use App\Http\Controllers\Api\WidgetController;
 use App\Http\Controllers\Auth\LoginController as AuthLoginController;
 use App\Http\Controllers\DatasetColumnController;
 use App\Http\Controllers\DatasetController;
@@ -21,6 +23,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
+
+    Route::prefix('api')->name('api.')->group(function () {
+        Route::get('/dashboards', [ApiDashboardController::class, 'index'])->name('dashboards.index');
+        Route::get('/dashboards/{dashboard}', [ApiDashboardController::class, 'show'])->name('dashboards.show');
+        Route::get('/widgets/{widget}/data', [WidgetController::class, 'data'])->name('widgets.data');
+    });
 
     Route::middleware('can:admin')->group(function () {
         Route::get('/data', [DatasetController::class, 'index'])->name('data');
@@ -43,6 +51,11 @@ Route::middleware('auth')->group(function () {
             Route::post('/queries/run', [SavedQueryController::class, 'run'])->name('queries.run');
             Route::get('/queries/{savedQuery}/run', [SavedQueryController::class, 'runSaved'])->name('queries.run-saved');
             Route::apiResource('queries', SavedQueryController::class)->parameters(['queries' => 'savedQuery']);
+
+            Route::apiResource('dashboards', ApiDashboardController::class)->only(['store', 'update', 'destroy']);
+            Route::post('/dashboards/{dashboard}/widgets', [WidgetController::class, 'store'])->name('widgets.store');
+            Route::put('/widgets/{widget}', [WidgetController::class, 'update'])->name('widgets.update');
+            Route::delete('/widgets/{widget}', [WidgetController::class, 'destroy'])->name('widgets.destroy');
         });
     });
 });
