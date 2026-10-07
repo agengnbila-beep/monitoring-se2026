@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\DatasetController as ApiDatasetController;
 use App\Http\Controllers\Auth\LoginController as AuthLoginController;
+use App\Http\Controllers\DatasetColumnController;
 use App\Http\Controllers\DatasetController;
 use Illuminate\Support\Facades\Route;
 
@@ -24,6 +25,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/data/upload', [DatasetController::class, 'store'])->name('data.upload');
         Route::get('/data/{dataset}/preview', [DatasetController::class, 'preview'])->name('data.preview');
         Route::post('/data/{dataset}/confirm', [DatasetController::class, 'confirm'])->name('data.confirm');
+        Route::get('/data/{dataset}', [DatasetController::class, 'show'])->name('data.show');
+        Route::patch('/data/{dataset}/columns', [DatasetColumnController::class, 'update'])->name('data.columns.update');
         Route::delete('/data/{dataset}', [DatasetController::class, 'destroy'])->name('data.destroy');
 
         Route::prefix('api')->name('api.')->group(function () {

@@ -84,10 +84,10 @@
                         <a href="{{ route('data.preview', $dataset) }}" class="outline-button">
                             Pratinjau
                         </a>
-                    @elseif ($dataset->status === 'done')
-                        <button type="button" class="outline-button">
+                    @elseif ($dataset->isImported())
+                        <a href="{{ route('data.show', $dataset) }}" class="outline-button">
                             Overview
-                        </button>
+                        </a>
                     @endif
 
                     @unless ($dataset->status === 'processing')

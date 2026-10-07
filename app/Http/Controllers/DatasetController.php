@@ -61,6 +61,23 @@ class DatasetController extends Controller
         return redirect()->route('data.preview', $dataset);
     }
 
+    /**
+     * Overview dataset yang sudah diimpor: ringkasan, profil kolom, pratinjau.
+     */
+    public function show(Dataset $dataset): View
+    {
+        abort_unless($dataset->isImported(), 404);
+
+        $columns = $dataset->columns()->get();
+
+        return view('data.show', [
+            'dataset' => $dataset,
+            'columns' => $columns,
+            'rows' => $dataset->previewRows($columns->pluck('name')->all()),
+            'types' => DatasetColumnController::TYPES,
+        ]);
+    }
+
     public function preview(Request $request, Dataset $dataset): View
     {
         abort_unless($dataset->status === 'uploaded', 404);

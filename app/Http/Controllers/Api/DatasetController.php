@@ -10,7 +10,6 @@ use App\Models\DatasetColumn;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\DB;
 
 class DatasetController extends Controller
 {
@@ -45,10 +44,7 @@ class DatasetController extends Controller
 
         $columns = $dataset->columns()->get();
 
-        $rows = DB::table($dataset->table_name)
-            ->orderBy('_row_id')
-            ->limit($validated['limit'] ?? 20)
-            ->get($columns->pluck('name')->all());
+        $rows = $dataset->previewRows($columns->pluck('name')->all(), $validated['limit'] ?? 20);
 
         return response()->json([
             'data' => [
@@ -60,6 +56,6 @@ class DatasetController extends Controller
 
     private function ensureImported(Dataset $dataset): void
     {
-        abort_unless($dataset->status === 'done', 409, 'Dataset belum selesai diimpor.');
+        abort_unless($dataset->isImported(), 409, 'Dataset belum selesai diimpor.');
     }
 }

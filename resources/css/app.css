@@ -729,3 +729,39 @@ a.outline-button {
 .preview-cancel {
     margin-top: 8px;
 }
+/* ===== Overview dataset ===== */
+.back-link {
+    display: inline-block;
+    color: #6b7280;
+    font-size: 13px;
+    text-decoration: none;
+    margin-bottom: 8px;
+}
+
+.overview-cards {
+    margin-bottom: 28px;
+}
+
+.section-title {
+    font-size: 16px;
+    margin: 8px 0 12px;
+}
+
+.table-input {
+    padding: 6px 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 13px;
+    min-width: 120px;
+}
+
+.preview-table code {
+    font-size: 12px;
+    color: #4b5563;
+}
+
+@media (max-width: 768px) {
+    .overview-cards {
+        grid-template-columns: 1fr;
+    }
+}
