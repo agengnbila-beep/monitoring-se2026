@@ -64,6 +64,8 @@ class DatasetColumnController extends Controller
             foreach ($columns as $column) {
                 $column->update($validated['columns'][$column->id]);
             }
+
+            $dataset->touch();
         });
 
         if ($retyped->isNotEmpty()) {

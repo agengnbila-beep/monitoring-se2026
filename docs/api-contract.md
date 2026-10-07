@@ -131,6 +131,37 @@ Contoh error (422):
 }
 ```
 
+Hasil disimpan di cache 5 menit (`meta.cached: true` saat diambil dari cache).
+Cache otomatis tidak terpakai lagi saat dataset diimpor ulang atau kolomnya diubah.
+
+## 5a. Saved query (CRUD)
+
+| Method | URL | Keterangan |
+|---|---|---|
+| GET | `/api/queries?dataset_id=7` | Daftar (filter dataset opsional) |
+| POST | `/api/queries` | Body: `{ "dataset_id", "name", "description", "config" }` → 201 |
+| GET | `/api/queries/{id}` | Detail |
+| PUT | `/api/queries/{id}` | Body sama dengan POST |
+| DELETE | `/api/queries/{id}` | 204; 409 bila masih dipakai widget |
+
+`config` disimpan dalam bentuk ternormalisasi (semua key terisi). Error validasi
+`config` memakai key berawalan `config.`, contoh `config.select.0`.
+
+```json
+{
+  "data": {
+    "id": 3,
+    "dataset_id": 7,
+    "dataset_name": "Monitoring Records",
+    "name": "KRT per kecamatan",
+    "description": null,
+    "config": { "select": ["kecamatan"], "aggregates": [], "filters": [], "group_by": [], "order_by": [], "limit": 1000 },
+    "created_at": "2026-10-07T10:00:00+07:00",
+    "updated_at": "2026-10-07T10:00:00+07:00"
+  }
+}
+```
+
 ## 6. Widget (`widgets.chart_type` + `widgets.options`)
 
 | chart_type | options |

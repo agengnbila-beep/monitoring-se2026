@@ -6,6 +6,7 @@ use App\Models\Dataset;
 use App\Models\DatasetColumn;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -26,23 +27,106 @@ class QueryEngine
     /** Query lebih lama dari ini dicatat di log untuk dievaluasi. */
     private const SLOW_QUERY_MS = 2000;
 
+    private const CACHE_MINUTES = 5;
+
     /**
      * Validasi konfigurasi builder, jalankan sebagai SQL, dan kembalikan
      * hasil dengan format docs/api-contract.md bagian 5.
      *
      * @param  array<string, mixed>  $config
-     * @return array{columns: list<array{name: string, label: string, type: string}>, rows: list<array<string, mixed>>, meta: array{row_count: int, limit: int, truncated: bool, duration_ms: int}}
+     * @return array{columns: list<array{name: string, label: string, type: string}>, rows: list<array<string, mixed>>, meta: array{row_count: int, limit: int, truncated: bool, duration_ms: int, cached: bool}}
      *
      * @throws ValidationException
      */
     public function run(Dataset $dataset, array $config): array
     {
-        abort_unless($dataset->isImported(), 409, 'Dataset belum selesai diimpor.');
+        $columns = $this->columnsOf($dataset);
 
-        /** @var Collection<string, DatasetColumn> $columns */
-        $columns = $dataset->columns()->get()->keyBy('name');
+        return $this->execute($dataset, $this->validate($config, $columns), $columns);
+    }
+
+    /**
+     * Sama dengan run(), tetapi hasil disimpan di cache beberapa menit.
+     * Kunci cache memuat `updated_at` dataset, sehingga import ulang atau
+     * perubahan kolom otomatis membuat hasil lama tidak terpakai lagi.
+     *
+     * @param  array<string, mixed>  $config
+     * @return array{columns: list<array{name: string, label: string, type: string}>, rows: list<array<string, mixed>>, meta: array{row_count: int, limit: int, truncated: bool, duration_ms: int, cached: bool}}
+     *
+     * @throws ValidationException
+     */
+    public function cachedRun(Dataset $dataset, array $config): array
+    {
+        $columns = $this->columnsOf($dataset);
         $config = $this->validate($config, $columns);
 
+        $key = sprintf(
+            'query:%d:%d:%s',
+            $dataset->id,
+            $dataset->updated_at?->getTimestamp() ?? 0,
+            md5(json_encode($config)),
+        );
+
+        $cached = Cache::get($key);
+
+        if (is_array($cached)) {
+            $cached['meta']['cached'] = true;
+
+            return $cached;
+        }
+
+        $result = $this->execute($dataset, $config, $columns);
+        Cache::put($key, $result, now()->addMinutes(self::CACHE_MINUTES));
+
+        return $result;
+    }
+
+    /**
+     * Validasi lalu kembalikan konfigurasi yang sudah dinormalisasi
+     * (semua key terisi), siap disimpan sebagai saved query.
+     *
+     * @param  array<string, mixed>  $config
+     * @return array<string, mixed>
+     *
+     * @throws ValidationException
+     */
+    public function normalize(Dataset $dataset, array $config): array
+    {
+        return $this->validate($config, $this->columnsOf($dataset));
+    }
+
+    /**
+     * Nama kolom yang akan muncul di hasil query, tanpa menjalankan query.
+     *
+     * @param  array<string, mixed>  $config
+     * @return list<string>
+     *
+     * @throws ValidationException
+     */
+    public function outputColumnNames(Dataset $dataset, array $config): array
+    {
+        $columns = $this->columnsOf($dataset);
+
+        return array_column($this->outputColumns($this->validate($config, $columns), $columns), 'name');
+    }
+
+    /**
+     * @return Collection<string, DatasetColumn>
+     */
+    private function columnsOf(Dataset $dataset): Collection
+    {
+        abort_unless($dataset->isImported(), 409, 'Dataset belum selesai diimpor.');
+
+        return $dataset->columns()->get()->keyBy('name');
+    }
+
+    /**
+     * @param  array<string, mixed>  $config
+     * @param  Collection<string, DatasetColumn>  $columns
+     * @return array{columns: list<array{name: string, label: string, type: string}>, rows: list<array<string, mixed>>, meta: array{row_count: int, limit: int, truncated: bool, duration_ms: int, cached: bool}}
+     */
+    private function execute(Dataset $dataset, array $config, Collection $columns): array
+    {
         $started = microtime(true);
         $rows = $this->build($dataset, $config)->limit($config['limit'] + 1)->get();
         $durationMs = (int) round((microtime(true) - $started) * 1000);
@@ -62,6 +146,7 @@ class QueryEngine
                 'limit' => $config['limit'],
                 'truncated' => $truncated,
                 'duration_ms' => $durationMs,
+                'cached' => false,
             ],
         ];
     }

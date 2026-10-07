@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\DatasetController as ApiDatasetController;
+use App\Http\Controllers\Api\SavedQueryController;
 use App\Http\Controllers\Auth\LoginController as AuthLoginController;
 use App\Http\Controllers\DatasetColumnController;
 use App\Http\Controllers\DatasetController;
@@ -33,6 +34,10 @@ Route::middleware('auth')->group(function () {
             Route::get('/datasets', [ApiDatasetController::class, 'index'])->name('datasets.index');
             Route::get('/datasets/{dataset}/profile', [ApiDatasetController::class, 'profile'])->name('datasets.profile');
             Route::get('/datasets/{dataset}/preview', [ApiDatasetController::class, 'preview'])->name('datasets.preview');
+
+            Route::post('/queries/run', [SavedQueryController::class, 'run'])->name('queries.run');
+            Route::get('/queries/{savedQuery}/run', [SavedQueryController::class, 'runSaved'])->name('queries.run-saved');
+            Route::apiResource('queries', SavedQueryController::class)->parameters(['queries' => 'savedQuery']);
         });
     });
 });
