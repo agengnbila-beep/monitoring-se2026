@@ -19,6 +19,7 @@ body {
 
 .sidebar {
     width: 240px;
+    flex-shrink: 0;
     background: #111827;
     color: white;
     padding: 24px 16px;
@@ -51,8 +52,11 @@ body {
 
 /* MAIN */
 
+/* min-width: 0 agar tabel lebar di-scroll di dalam kotaknya,
+   bukan mendorong seluruh halaman melebihi layar. */
 .main-content {
     flex: 1;
+    min-width: 0;
 }
 
 .topbar {
@@ -715,6 +719,9 @@ a.outline-button {
     border-bottom: 1px solid #f3f4f6;
     text-align: left;
     white-space: nowrap;
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .preview-table th {
@@ -748,11 +755,12 @@ a.outline-button {
 }
 
 .table-input {
+    width: 100%;
+    min-width: 110px;
     padding: 6px 8px;
     border: 1px solid #d1d5db;
     border-radius: 6px;
     font-size: 13px;
-    min-width: 120px;
 }
 
 .preview-table code {

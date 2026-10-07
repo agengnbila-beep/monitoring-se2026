@@ -24,7 +24,7 @@ class DatasetOverviewTest extends TestCase
             ->assertOk()
             ->assertSee('Penduduk')
             ->assertSeeInOrder(['<code>kecamatan</code>', '<code>kode</code>', '<code>jumlah</code>'], false)
-            ->assertSeeInOrder(['<td>Bangli</td>', '<td>Susut</td>'], false);
+            ->assertSeeInOrder(['>Bangli</td>', '>Susut</td>'], false);
     }
 
     public function test_overview_of_dataset_not_yet_imported_is_404(): void

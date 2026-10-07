@@ -103,7 +103,7 @@ class DatasetUploadTest extends TestCase
 
         $this->get(route('data.preview', $dataset))
             ->assertOk()
-            ->assertSeeInOrder(['<th>nama</th>', '<th>umur</th>', '<td>Budi</td>', '<td>Siti</td>'], false);
+            ->assertSeeInOrder(['<th>nama</th>', '<th>umur</th>', '>Budi</td>', '>Siti</td>'], false);
     }
 
     public function test_preview_shows_at_most_twenty_rows(): void
@@ -112,8 +112,8 @@ class DatasetUploadTest extends TestCase
 
         $this->get(route('data.preview', $dataset))
             ->assertOk()
-            ->assertSee('<td>20</td>', false)
-            ->assertDontSee('<td>21</td>', false);
+            ->assertSee('>20</td>', false)
+            ->assertDontSee('>21</td>', false);
     }
 
     public function test_xlsx_preview_lists_sheets_and_can_switch_sheet(): void
@@ -123,12 +123,12 @@ class DatasetUploadTest extends TestCase
         $this->get(route('data.preview', $dataset))
             ->assertOk()
             ->assertSee('<option value="Data"', false)
-            ->assertSee('<td>abaikan</td>', false);
+            ->assertSee('>abaikan</td>', false);
 
         $this->get(route('data.preview', [$dataset, 'sheet' => 'Data']))
             ->assertOk()
-            ->assertSee('<td>Bangli</td>', false)
-            ->assertDontSee('<td>abaikan</td>', false);
+            ->assertSee('>Bangli</td>', false)
+            ->assertDontSee('>abaikan</td>', false);
     }
 
     public function test_confirm_saves_name_and_sheet_and_queues_import(): void

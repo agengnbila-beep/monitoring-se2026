@@ -49,7 +49,7 @@
                     @foreach ($preview['rows'] as $row)
                         <tr>
                             @foreach ($preview['headers'] as $i => $header)
-                                <td>{{ $row[$i] ?? '' }}</td>
+                                <td title="{{ $row[$i] ?? '' }}">{{ $row[$i] ?? '' }}</td>
                             @endforeach
                         </tr>
                     @endforeach

@@ -97,8 +97,8 @@
                             </td>
                             <td>{{ number_format($column->null_count ?? 0) }}</td>
                             <td>{{ number_format($column->unique_count ?? 0) }}</td>
-                            <td>{{ $column->min_value }}</td>
-                            <td>{{ $column->max_value }}</td>
+                            <td title="{{ $column->min_value }}">{{ $column->min_value }}</td>
+                            <td title="{{ $column->max_value }}">{{ $column->max_value }}</td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -115,7 +115,7 @@
             <thead>
                 <tr>
                     @foreach ($columns as $column)
-                        <th>{{ $column->label }}</th>
+                        <th title="{{ $column->label }}">{{ $column->label }}</th>
                     @endforeach
                 </tr>
             </thead>
@@ -124,7 +124,7 @@
                 @foreach ($rows as $row)
                     <tr>
                         @foreach ($columns as $column)
-                            <td>{{ $row->{$column->name} }}</td>
+                            <td title="{{ $row->{$column->name} }}">{{ $row->{$column->name} }}</td>
                         @endforeach
                     </tr>
                 @endforeach
