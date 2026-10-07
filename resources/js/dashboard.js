@@ -53,6 +53,8 @@ export function initDashboard(root) {
         return { card, body, note, tableView, actions };
     };
 
+    const filterLabel = (key) => dashboard.filters.find((f) => f.key === key)?.label ?? key;
+
     const load = async (widget, params = new URLSearchParams()) => {
         const parts = cards.get(widget.id);
         parts.body.replaceChildren(emptyState("Memuat…"));
@@ -72,8 +74,14 @@ export function initDashboard(root) {
             const result = { columns: body.data.columns, rows: body.data.rows, meta: body.meta };
             const { note } = renderWidget(parts.body, widget, result);
 
-            parts.note.textContent = note ?? "";
-            parts.note.hidden = !note;
+            const ignored = body.meta.filters_ignored ?? [];
+            const notes = [
+                note,
+                ignored.length ? `Filter ${ignored.map(filterLabel).join(", ")} tidak berlaku untuk widget ini.` : null,
+            ].filter(Boolean);
+
+            parts.note.textContent = notes.join(" ");
+            parts.note.hidden = notes.length === 0;
             parts.tableView.replaceChildren(renderTable(result));
         } catch (error) {
             const state = emptyState(error.message);
@@ -93,7 +101,106 @@ export function initDashboard(root) {
 
     const loadAll = (params) => dashboard.widgets.forEach((widget) => load(widget, params));
 
-    loadAll();
+    const filterParams = initFilters(root, dashboard, loadAll);
+    loadAll(filterParams);
 
     return { dashboard, cards, load, loadAll };
 }
+
+// =========================
+// FILTER GLOBAL (#18)
+// Nilai filter disimpan di URL (filters[kecamatan]=...) agar tautan bisa dibagikan.
+// =========================
+
+function initFilters(root, dashboard, loadAll) {
+    const bar = document.getElementById("dashFilters");
+    const filters = dashboard.filters ?? [];
+
+    if (filters.length === 0) {
+        return new URLSearchParams();
+    }
+
+    const url = new URL(window.location.href);
+    const controls = [];
+
+    const paramsFromControls = () => {
+        const params = new URLSearchParams();
+        controls.forEach(({ filter, inputs }) => {
+            if (filter.type === "select") {
+                if (inputs[0].value) {
+                    params.set(`filters[${filter.key}]`, inputs[0].value);
+                }
+            } else {
+                if (inputs[0].value) {
+                    params.set(`filters[${filter.key}][from]`, inputs[0].value);
+                }
+                if (inputs[1].value) {
+                    params.set(`filters[${filter.key}][to]`, inputs[1].value);
+                }
+            }
+        });
+        return params;
+    };
+
+    const apply = () => {
+        const params = paramsFromControls();
+        const next = new URL(window.location.href);
+        [...next.searchParams.keys()].filter((k) => k.startsWith("filters[")).forEach((k) => next.searchParams.delete(k));
+        params.forEach((value, key) => next.searchParams.set(key, value));
+        history.replaceState(null, "", next);
+        loadAll(params);
+    };
+
+    filters.forEach((filter) => {
+        const wrapper = document.createElement("label");
+        wrapper.className = "dash-filter";
+        wrapper.append(Object.assign(document.createElement("span"), { textContent: filter.label }));
+
+        let inputs;
+        if (filter.type === "select") {
+            const select = Object.assign(document.createElement("select"), { className: "qb-input" });
+            select.setAttribute("aria-label", filter.label);
+            const current = url.searchParams.get(`filters[${filter.key}]`) ?? "";
+            select.append(new Option("Semua", ""));
+            if (current) {
+                select.append(new Option(current, current, true, true));
+            }
+            fetch(root.dataset.filterOptionsUrl.replace("__KEY__", filter.key), { headers: { Accept: "application/json" } })
+                .then((r) => (r.ok ? r.json() : { data: [] }))
+                .then(({ data }) => {
+                    select.replaceChildren(new Option("Semua", ""), ...data.map((v) => new Option(v, v, false, v === current)));
+                });
+            select.addEventListener("change", apply);
+            inputs = [select];
+        } else {
+            const from = Object.assign(document.createElement("input"), { type: "date", className: "qb-input", value: url.searchParams.get(`filters[${filter.key}][from]`) ?? "" });
+            const to = Object.assign(document.createElement("input"), { type: "date", className: "qb-input", value: url.searchParams.get(`filters[${filter.key}][to]`) ?? "" });
+            from.setAttribute("aria-label", `${filter.label} dari`);
+            to.setAttribute("aria-label", `${filter.label} sampai`);
+            from.addEventListener("change", apply);
+            to.addEventListener("change", apply);
+            const range = document.createElement("span");
+            range.className = "dash-range";
+            range.append(from, " – ", to);
+            wrapper.append(range);
+            inputs = [from, to];
+        }
+
+        if (filter.type === "select") {
+            wrapper.append(inputs[0]);
+        }
+        controls.push({ filter, inputs });
+        bar.append(wrapper);
+    });
+
+    const reset = Object.assign(document.createElement("button"), { type: "button", className: "outline-button", textContent: "Reset filter" });
+    reset.addEventListener("click", () => {
+        controls.forEach(({ inputs }) => inputs.forEach((input) => (input.value = "")));
+        apply();
+    });
+    bar.append(reset);
+    bar.hidden = false;
+
+    return paramsFromControls();
+}
+

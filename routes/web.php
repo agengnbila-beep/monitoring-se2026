@@ -28,6 +28,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboards', [ApiDashboardController::class, 'index'])->name('dashboards.index');
         Route::get('/dashboards/{dashboard}', [ApiDashboardController::class, 'show'])->name('dashboards.show');
         Route::get('/widgets/{widget}/data', [WidgetController::class, 'data'])->name('widgets.data');
+        Route::get('/dashboards/{dashboard}/filters/{key}/options', [WidgetController::class, 'filterOptions'])->name('dashboards.filter-options');
     });
 
     Route::middleware('can:admin')->group(function () {

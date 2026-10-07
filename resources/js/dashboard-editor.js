@@ -97,12 +97,39 @@ export function initDashboardEditor(root, view) {
     const nameInput = make("input", { type: "text", className: "qb-input", value: dashboard.name, maxLength: 255 });
     const descriptionInput = make("input", { type: "text", className: "qb-input", value: dashboard.description ?? "", maxLength: 1000, placeholder: "Deskripsi (opsional)" });
 
+    // Definisi filter global: key = nama kolom (SQL) yang dicari di dataset tiap widget.
+    const filterRows = make("div");
+    const addFilterRow = (filter = { key: "", label: "", type: "select" }) => {
+        const row = make("div", { className: "qb-row" });
+        const key = make("input", { type: "text", className: "qb-input", value: filter.key, placeholder: "nama kolom, mis. kecamatan" });
+        key.setAttribute("aria-label", "Kolom filter");
+        const label = make("input", { type: "text", className: "qb-input", value: filter.label, placeholder: "label, mis. Kecamatan" });
+        label.setAttribute("aria-label", "Label filter");
+        const type = selectOf([{ value: "select", label: "Pilihan nilai" }, { value: "date_range", label: "Rentang tanggal" }], filter.type, "Jenis filter");
+        const remove = make("button", { type: "button", className: "cancel-button qb-remove", textContent: "×" });
+        remove.setAttribute("aria-label", "Hapus filter");
+        remove.addEventListener("click", () => row.remove());
+        row.append(key, label, type, remove);
+        filterRows.append(row);
+    };
+    (dashboard.filters ?? []).forEach(addFilterRow);
+    const addFilterButton = make("button", { type: "button", className: "outline-button", textContent: "+ Tambah filter global" });
+    addFilterButton.addEventListener("click", () => addFilterRow());
+
+    const readFilters = () =>
+        [...filterRows.children]
+            .map((row) => {
+                const [key, label, type] = row.querySelectorAll("input, select");
+                return { key: key.value.trim(), label: label.value.trim(), type: type.value };
+            })
+            .filter((f) => f.key !== "");
+
     const saveSettings = make("button", { type: "button", textContent: "Simpan pengaturan" });
     saveSettings.addEventListener("click", async () => {
         const response = await request(root.dataset.dashboardUrl, "PUT", {
             name: nameInput.value.trim(),
             description: descriptionInput.value.trim() || null,
-            filters: dashboard.filters,
+            filters: readFilters(),
         });
         response.ok ? reloadInEditMode() : showError(response);
     });
@@ -356,6 +383,11 @@ export function initDashboardEditor(root, view) {
         make("section", { className: "qb-panel" }, [
             make("h2", { className: "section-title", textContent: "Pengaturan dashboard" }),
             make("div", { className: "dash-form-grid" }, [field("Nama", nameInput), field("Deskripsi", descriptionInput)]),
+            make("div", { className: "dash-field" }, [
+                make("span", { textContent: "Filter global (berlaku untuk widget yang dataset-nya punya kolom tersebut)" }),
+                filterRows,
+                addFilterButton,
+            ]),
             make("div", { className: "qb-actions" }, [saveSettings, addWidget, deleteDashboard]),
         ]),
         errorBox,

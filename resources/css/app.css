@@ -1105,3 +1105,34 @@ button:disabled {
 .dash-options .dash-field select {
     max-width: 420px;
 }
+
+/* ===== Filter global ===== */
+.dash-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+    align-items: flex-end;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+}
+
+.dash-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    color: #4b5563;
+}
+
+.dash-range {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.dash-filters .outline-button {
+    padding: 8px 12px;
+}

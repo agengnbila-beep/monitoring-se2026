@@ -40,7 +40,10 @@ class DashboardSeeder extends Seeder
         $dashboard = Dashboard::create([
             'name' => 'Monitoring SE2026',
             'slug' => 'monitoring-se2026',
-            'filters' => [['key' => 'kecamatan', 'label' => 'Kecamatan', 'type' => 'select']],
+            'filters' => [
+                ['key' => 'kecamatan', 'label' => 'Kecamatan', 'type' => 'select'],
+                ['key' => 'tanggal_pendataan', 'label' => 'Periode pendataan', 'type' => 'date_range'],
+            ],
         ]);
 
         $dashboard->widgets()->createMany([

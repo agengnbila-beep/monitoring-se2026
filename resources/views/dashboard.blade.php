@@ -58,6 +58,7 @@
         </div>
     @else
         <div id="dashboardRoot" data-dashboard='@json($payload)'
+            data-filter-options-url="{{ url('/api/dashboards/'.$dashboard->id.'/filters/__KEY__/options') }}"
             @can('admin')
                 data-can-edit="1"
                 data-queries-url="{{ route('api.queries.index') }}"
@@ -69,6 +70,8 @@
             @endcan
             >
             <div id="dashEditor" hidden></div>
+
+            <div id="dashFilters" class="dash-filters" hidden></div>
 
             <div class="dashboard-grid" id="dashboardGrid">
                 @if ($payload['widgets'] === [])

@@ -219,3 +219,17 @@ Menghapus dashboard ikut menghapus widget-nya; saved query tetap ada.
   { "key": "date_modified", "label": "Periode", "type": "date_range" }
 ]
 ```
+Filter diterapkan ke widget yang dataset-nya punya kolom dengan `name` = `key`;
+widget lain mengabaikannya. Nilai filter selalu memakai parameter binding.
+
+Nilai filter dikirim ke data widget sebagai query string (sama dengan URL laman dashboard):
+
+- select: `GET /api/widgets/{id}/data?filters[kecamatan]=Bangli` → `kecamatan = 'Bangli'`
+- date_range: `filters[periode][from]=2026-06-01&filters[periode][to]=2026-06-30`
+  (format `YYYY-MM-DD`, keduanya opsional, batas akhir inklusif)
+
+Key yang tidak didefinisikan dashboard diabaikan. Respons menambah
+`meta.filters_applied` dan `meta.filters_ignored` (key yang tidak berlaku untuk widget itu).
+
+Pilihan nilai filter select: `GET /api/dashboards/{id}/filters/{key}/options`
+→ `{ "data": ["Bangli", "Susut"] }` (nilai unik dari dataset widget, maks 500).
