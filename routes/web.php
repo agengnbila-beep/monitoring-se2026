@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\SavedQueryController;
 use App\Http\Controllers\Auth\LoginController as AuthLoginController;
 use App\Http\Controllers\DatasetColumnController;
 use App\Http\Controllers\DatasetController;
+use App\Http\Controllers\QueryPageController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
@@ -29,6 +30,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/data/{dataset}', [DatasetController::class, 'show'])->name('data.show');
         Route::patch('/data/{dataset}/columns', [DatasetColumnController::class, 'update'])->name('data.columns.update');
         Route::delete('/data/{dataset}', [DatasetController::class, 'destroy'])->name('data.destroy');
+
+        Route::get('/queries', [QueryPageController::class, 'index'])->name('queries.index');
+        Route::get('/queries/builder', [QueryPageController::class, 'builder'])->name('queries.builder');
+        Route::delete('/queries/{savedQuery}', [QueryPageController::class, 'destroy'])->name('queries.destroy');
 
         Route::prefix('api')->name('api.')->group(function () {
             Route::get('/datasets', [ApiDatasetController::class, 'index'])->name('datasets.index');

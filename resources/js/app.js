@@ -1,3 +1,5 @@
+import { initQueryBuilder } from "./query-builder";
+
 document.addEventListener("DOMContentLoaded", function () {
     // =========================
     // ELEMENT
@@ -158,5 +160,15 @@ document.addEventListener("DOMContentLoaded", function () {
         };
 
         setTimeout(poll, 5000);
+    }
+
+    // =========================
+    // QUERY BUILDER
+    // =========================
+
+    const queryBuilder = document.getElementById("queryBuilder");
+
+    if (queryBuilder) {
+        initQueryBuilder(queryBuilder);
     }
 });
