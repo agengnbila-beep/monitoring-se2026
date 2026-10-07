@@ -1136,3 +1136,18 @@ button:disabled {
 .dash-filters .outline-button {
     padding: 8px 12px;
 }
+
+/* ===== Aksesibilitas & perapian (#21) ===== */
+:focus-visible {
+    outline: 2px solid #4f46e5;
+    outline-offset: 2px;
+}
+
+.sidebar a:focus-visible {
+    outline-color: #a5b4fc;
+}
+
+form + .section-title,
+.preview-confirm + .preview-cancel {
+    margin-top: 28px;
+}

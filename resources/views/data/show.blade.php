@@ -18,7 +18,7 @@
                 @if ($dataset->sheet_name)
                     • sheet {{ $dataset->sheet_name }}
                 @endif
-                • diimpor {{ $dataset->updated_at->format('d F Y H:i') }}
+                • diimpor {{ $dataset->updated_at->translatedFormat('d F Y H:i') }}
             </p>
         </div>
 
@@ -35,7 +35,7 @@
 
         <div class="card">
             <span>Baris</span>
-            <strong>{{ number_format($dataset->row_count) }}</strong>
+            <strong>{{ number_format($dataset->row_count, 0, ',', '.') }}</strong>
         </div>
 
         <div class="card">
@@ -95,8 +95,8 @@
                                     @endforeach
                                 </select>
                             </td>
-                            <td>{{ number_format($column->null_count ?? 0) }}</td>
-                            <td>{{ number_format($column->unique_count ?? 0) }}</td>
+                            <td>{{ number_format($column->null_count ?? 0, 0, ',', '.') }}</td>
+                            <td>{{ number_format($column->unique_count ?? 0, 0, ',', '.') }}</td>
                             <td title="{{ $column->min_value }}">{{ $column->min_value }}</td>
                             <td title="{{ $column->max_value }}">{{ $column->max_value }}</td>
                         </tr>

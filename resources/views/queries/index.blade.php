@@ -44,7 +44,7 @@
                         <tr>
                             <td title="{{ $query->description }}">{{ $query->name }}</td>
                             <td>{{ $query->dataset->name }}</td>
-                            <td>{{ $query->updated_at->format('d M Y H:i') }}</td>
+                            <td>{{ $query->updated_at->translatedFormat('d M Y H:i') }}</td>
                             <td class="table-actions">
                                 <a href="{{ route('queries.builder', ['query' => $query->id]) }}" class="outline-button">Buka</a>
 

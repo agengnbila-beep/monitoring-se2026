@@ -34,7 +34,7 @@ class QueryEngineTest extends TestCase
         $this->assertSame(
             [
                 ['name' => 'kecamatan', 'label' => 'Kecamatan', 'type' => 'text'],
-                ['name' => 'jumlah', 'label' => 'jumlah', 'type' => 'integer'],
+                ['name' => 'jumlah', 'label' => 'Jumlah', 'type' => 'integer'],
             ],
             $result['columns'],
         );
@@ -50,6 +50,7 @@ class QueryEngineTest extends TestCase
         ]);
 
         $this->assertSame([['total_art' => 20, 'rata_luas' => 2.0]], $result['rows']);
+        $this->assertSame(['Total art', 'Rata luas'], array_column($result['columns'], 'label'));
     }
 
     /**

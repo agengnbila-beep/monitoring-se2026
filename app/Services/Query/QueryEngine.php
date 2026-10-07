@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Validator as ValidatorInstance;
@@ -373,7 +374,7 @@ class QueryEngine
 
             $output[] = [
                 'name' => $aggregate['as'],
-                'label' => $aggregate['as'],
+                'label' => Str::of($aggregate['as'])->replace('_', ' ')->ucfirst()->toString(),
                 'type' => $type,
             ];
         }

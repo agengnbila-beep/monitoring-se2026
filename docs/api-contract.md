@@ -106,7 +106,7 @@ Semua mengembalikan:
   "data": {
     "columns": [
       { "name": "kecamatan", "label": "Kecamatan", "type": "text" },
-      { "name": "jumlah", "label": "jumlah", "type": "integer" }
+      { "name": "jumlah", "label": "Jumlah", "type": "integer" }
     ],
     "rows": [{ "kecamatan": "ABANG", "jumlah": 1204 }]
   },
@@ -120,7 +120,8 @@ Semua mengembalikan:
 }
 ```
 
-`truncated: true` bila hasil terpotong oleh `limit`.
+`truncated: true` bila hasil terpotong oleh `limit`. Label kolom hasil ringkasan dibentuk dari alias
+(`total_usaha` → `Total usaha`).
 
 Contoh error (422):
 

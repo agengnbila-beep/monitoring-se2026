@@ -36,7 +36,7 @@
 
                     <p>
                         @if ($dataset->status === 'done')
-                            {{ number_format($dataset->row_count) }}
+                            {{ number_format($dataset->row_count, 0, ',', '.') }}
                             baris
                             •
                             {{ $dataset->column_count }}
@@ -51,7 +51,7 @@
                     </p>
 
                     <small>
-                        {{ $dataset->created_at->format('d F Y') }}
+                        {{ $dataset->created_at->translatedFormat('d F Y') }}
                     </small>
 
                 </div>

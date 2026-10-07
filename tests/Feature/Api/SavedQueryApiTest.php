@@ -130,7 +130,7 @@ class SavedQueryApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.columns', [
                 ['name' => 'kecamatan', 'label' => 'Kecamatan', 'type' => 'text'],
-                ['name' => 'jumlah', 'label' => 'jumlah', 'type' => 'integer'],
+                ['name' => 'jumlah', 'label' => 'Jumlah', 'type' => 'integer'],
             ])
             ->assertJsonPath('data.rows', [['kecamatan' => 'Bangli', 'jumlah' => 2], ['kecamatan' => 'Susut', 'jumlah' => 1]])
             ->assertJsonPath('meta.truncated', false)
