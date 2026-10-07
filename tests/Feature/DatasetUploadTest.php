@@ -44,6 +44,34 @@ class DatasetUploadTest extends TestCase
         Storage::disk('local')->assertExists($dataset->file_path);
     }
 
+    public function test_upload_via_javascript_returns_preview_url_as_json(): void
+    {
+        $file = UploadedFile::fake()->createWithContent('penduduk.csv', "nama\nBudi\n");
+
+        $response = $this->actingAs($this->admin)->postJson('/data/upload', ['file' => $file]);
+
+        $response->assertCreated()
+            ->assertExactJson(['redirect' => route('data.preview', Dataset::sole())]);
+    }
+
+    public function test_upload_via_javascript_returns_validation_message_as_json(): void
+    {
+        $this->actingAs($this->admin)
+            ->postJson('/data/upload', ['file' => UploadedFile::fake()->create('laporan.pdf', 10)])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['file' => 'Format file harus CSV, XLSX, atau JSON.']);
+    }
+
+    public function test_file_rejected_by_php_upload_limit_gets_clear_message(): void
+    {
+        $path = tempnam(sys_get_temp_dir(), 'csv');
+        $file = new UploadedFile($path, 'besar.csv', null, UPLOAD_ERR_INI_SIZE, true);
+
+        $this->actingAs($this->admin)
+            ->postJson('/data/upload', ['file' => $file])
+            ->assertJsonValidationErrors(['file' => 'File gagal diupload. Ukurannya mungkin melebihi batas server.']);
+    }
+
     public function test_unsupported_file_type_is_rejected(): void
     {
         $this->actingAs($this->admin)

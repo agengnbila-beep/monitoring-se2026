@@ -8,6 +8,7 @@ use App\Services\Import\DatasetPreview;
 use App\Services\Import\ReaderFactory;
 use App\Services\Import\XlsxReader;
 use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -25,11 +26,17 @@ class DatasetController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    /**
+     * Form upload memakai XHR (agar ada progress bar) dan meminta JSON;
+     * tanpa JavaScript, form biasa tetap berfungsi lewat redirect.
+     */
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         $request->validate([
             'file' => ['required', 'file', 'extensions:csv,xlsx,json', 'max:20480'],
         ], [
+            'file.required' => 'Pilih file yang akan diupload.',
+            'file.uploaded' => 'File gagal diupload. Ukurannya mungkin melebihi batas server.',
             'file.extensions' => 'Format file harus CSV, XLSX, atau JSON.',
             'file.max' => 'Ukuran file maksimal 20 MB.',
         ]);
@@ -46,6 +53,10 @@ class DatasetController extends Controller
             'status' => 'uploaded',
             'created_by' => $request->user()->id,
         ]);
+
+        if ($request->expectsJson()) {
+            return response()->json(['redirect' => route('data.preview', $dataset)], 201);
+        }
 
         return redirect()->route('data.preview', $dataset);
     }

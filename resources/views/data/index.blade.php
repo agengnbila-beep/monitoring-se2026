@@ -23,10 +23,10 @@
     </div>
 
 
-    <div class="dataset-list">
+    <div class="dataset-list" id="datasetList" data-poll-url="{{ route('api.datasets.index') }}">
 
         @forelse ($datasets as $dataset)
-            <div class="dataset-card">
+            <div class="dataset-card" data-dataset-id="{{ $dataset->id }}" data-status="{{ $dataset->status }}">
 
                 <div class="dataset-info">
 
@@ -134,7 +134,7 @@
             </div>
 
 
-            <form action="{{ route('data.upload') }}" method="POST" enctype="multipart/form-data">
+            <form id="uploadForm" action="{{ route('data.upload') }}" method="POST" enctype="multipart/form-data">
 
                 @csrf
 
@@ -158,6 +158,19 @@
                         <p class="form-error">{{ $message }}</p>
                     @enderror
 
+                    <p class="form-error" id="uploadError" hidden></p>
+
+                </div>
+
+                <div class="upload-progress" id="uploadProgress">
+                    <div class="progress-header">
+                        <span>Mengupload…</span>
+                        <span id="uploadPercent">0%</span>
+                    </div>
+
+                    <div class="progress-track">
+                        <div class="progress-bar" id="uploadBar"></div>
+                    </div>
                 </div>
 
 
@@ -168,7 +181,7 @@
                     </button>
 
 
-                    <button type="submit" class="upload-button">
+                    <button type="submit" class="upload-button" id="uploadSubmit">
                         Upload
                     </button>
 
