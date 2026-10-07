@@ -1,39 +1,49 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard')
+@section('title', $dashboard?->name ?? 'Dashboard')
 
 @section('page-title', 'Dashboard')
 
 @section('content')
 
-    <div class="page-header">
+    <div class="page-header data-header">
 
-        <h1>Monitoring SE2026</h1>
+        <div>
+            <h1>{{ $dashboard?->name ?? 'Dashboard' }}</h1>
 
-        <p>
-            Ringkasan monitoring data SE2026
-        </p>
+            @if ($dashboard?->description)
+                <p>{{ $dashboard->description }}</p>
+            @endif
+        </div>
+
+        @if ($dashboards->count() > 1)
+            <label class="dashboard-switch">
+                <span>Dashboard</span>
+                <select class="qb-input" onchange="window.location = this.value" aria-label="Pilih dashboard">
+                    @foreach ($dashboards as $item)
+                        <option value="{{ route('dashboards.show', $item) }}" @selected($item->is($dashboard))>{{ $item->name }}</option>
+                    @endforeach
+                </select>
+            </label>
+        @endif
 
     </div>
 
-
-    <div class="cards">
-
-        <div class="card">
-            <span>Total Dataset</span>
-            <strong>0</strong>
+    @if (! $dashboard)
+        <div class="empty-state">
+            <h3>Belum ada dashboard</h3>
+            <p>Dashboard dibuat oleh admin dari saved query.</p>
         </div>
-
-        <div class="card">
-            <span>Total Baris</span>
-            <strong>0</strong>
+    @else
+        <div id="dashboardRoot" data-dashboard='@json($payload)'>
+            <div class="dashboard-grid" id="dashboardGrid">
+                @if ($payload['widgets'] === [])
+                    <div class="empty-state dashboard-empty">
+                        <h3>Dashboard ini belum punya widget</h3>
+                    </div>
+                @endif
+            </div>
         </div>
-
-        <div class="card">
-            <span>Query</span>
-            <strong>0</strong>
-        </div>
-
-    </div>
+    @endif
 
 @endsection

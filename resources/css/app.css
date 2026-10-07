@@ -900,3 +900,114 @@ button:disabled {
 .qb-null {
     color: #9ca3af;
 }
+
+/* ===== Dashboard ===== */
+.dashboard-switch {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.dashboard-empty {
+    grid-column: 1 / -1;
+}
+
+.widget-card {
+    grid-column: span var(--span, 6);
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 18px 20px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.widget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.widget-header h3 {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.widget-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.widget-toggle {
+    padding: 6px 10px;
+    font-size: 12px;
+}
+
+.widget-body {
+    flex: 1;
+    min-height: 60px;
+}
+
+.widget-state {
+    color: #6b7280;
+    font-size: 14px;
+    padding: 24px 0;
+    text-align: center;
+}
+
+.widget-error {
+    color: #b91c1c;
+}
+
+.widget-note {
+    color: #6b7280;
+    font-size: 12px;
+    margin-top: 8px;
+}
+
+.widget-table {
+    margin-top: 12px;
+}
+
+.widget-table .table-scroll,
+.widget-type-table .table-scroll {
+    margin-bottom: 0;
+    max-height: 360px;
+    overflow-y: auto;
+}
+
+.preview-table td.num,
+.preview-table th.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.kpi-value {
+    font-size: 48px;
+    font-weight: 600;
+    line-height: 1.1;
+    color: #1f2937;
+}
+
+.kpi-label {
+    color: #6b7280;
+    font-size: 14px;
+    margin-top: 6px;
+}
+
+@media (max-width: 1024px) {
+    .widget-card {
+        grid-column: span 12;
+    }
+}

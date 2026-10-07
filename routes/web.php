@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\DatasetController as ApiDatasetController;
 use App\Http\Controllers\Api\SavedQueryController;
 use App\Http\Controllers\Api\WidgetController;
 use App\Http\Controllers\Auth\LoginController as AuthLoginController;
+use App\Http\Controllers\DashboardPageController;
 use App\Http\Controllers\DatasetColumnController;
 use App\Http\Controllers\DatasetController;
 use App\Http\Controllers\QueryPageController;
@@ -20,9 +21,8 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthLoginController::class, 'destroy'])->name('logout');
 
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardPageController::class, 'index'])->name('dashboard');
+    Route::get('/dashboards/{dashboard:slug}', [DashboardPageController::class, 'show'])->name('dashboards.show');
 
     Route::prefix('api')->name('api.')->group(function () {
         Route::get('/dashboards', [ApiDashboardController::class, 'index'])->name('dashboards.index');

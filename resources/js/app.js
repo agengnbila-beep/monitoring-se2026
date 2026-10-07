@@ -171,4 +171,15 @@ document.addEventListener("DOMContentLoaded", function () {
     if (queryBuilder) {
         initQueryBuilder(queryBuilder);
     }
+
+    // =========================
+    // DASHBOARD
+    // =========================
+
+    const dashboardRoot = document.getElementById("dashboardRoot");
+
+    // Dimuat terpisah agar ECharts (±550 KB) hanya diunduh di laman dashboard.
+    if (dashboardRoot) {
+        import("./dashboard").then(({ initDashboard }) => initDashboard(dashboardRoot));
+    }
 });
