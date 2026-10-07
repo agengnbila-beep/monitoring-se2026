@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\ImportDataset;
 use App\Models\Dataset;
 use App\Services\Import\DatasetPreview;
 use App\Services\Import\ReaderFactory;
@@ -9,6 +10,7 @@ use App\Services\Import\XlsxReader;
 use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -41,7 +43,7 @@ class DatasetController extends Controller
             'file_path' => $file->storeAs('uploads', Str::uuid().'.'.$type, 'local'),
             'file_type' => $type,
             'file_size' => $file->getSize(),
-            'status' => 'pending',
+            'status' => 'uploaded',
             'created_by' => $request->user()->id,
         ]);
 
@@ -50,7 +52,7 @@ class DatasetController extends Controller
 
     public function preview(Request $request, Dataset $dataset): View
     {
-        abort_unless($dataset->status === 'pending', 404);
+        abort_unless($dataset->status === 'uploaded', 404);
 
         $sheets = [];
         $sheet = null;
@@ -77,7 +79,7 @@ class DatasetController extends Controller
 
     public function confirm(Request $request, Dataset $dataset): RedirectResponse
     {
-        abort_unless($dataset->status === 'pending', 404);
+        abort_unless($dataset->status === 'uploaded', 404);
 
         $sheets = $this->sheetsOf($dataset);
 
@@ -89,22 +91,31 @@ class DatasetController extends Controller
         $dataset->update([
             'name' => $validated['name'],
             'sheet_name' => $validated['sheet'] ?? null,
+            'status' => 'pending',
         ]);
 
-        // #7: proses import dijalankan dari sini lewat queue.
+        ImportDataset::dispatch($dataset);
 
         return redirect()->route('data')
-            ->with('success', "Dataset \"{$dataset->name}\" siap diimpor.");
+            ->with('success', "Dataset \"{$dataset->name}\" masuk antrean import.");
     }
 
     public function destroy(Dataset $dataset): RedirectResponse
     {
+        if ($dataset->status === 'processing') {
+            return back()->with('error', 'Dataset sedang diimpor, tunggu sampai selesai.');
+        }
+
         if ($dataset->savedQueries()->exists()) {
             return back()->with('error', 'Dataset tidak bisa dihapus karena masih dipakai saved query.');
         }
 
         if ($dataset->file_path !== null) {
             Storage::disk('local')->delete($dataset->file_path);
+        }
+
+        if ($dataset->table_name !== null) {
+            Schema::dropIfExists($dataset->table_name);
         }
 
         $dataset->delete();

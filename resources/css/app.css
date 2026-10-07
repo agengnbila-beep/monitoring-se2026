@@ -275,6 +275,15 @@ button {
     color: #dc2626;
 }
 
+.status-uploaded {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+.dataset-error {
+    color: #dc2626;
+}
+
 /* OUTLINE BUTTON */
 
 .outline-button {

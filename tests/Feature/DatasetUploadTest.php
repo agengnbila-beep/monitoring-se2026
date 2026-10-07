@@ -2,10 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Jobs\ImportDataset;
 use App\Models\Dataset;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Writer\XLSX\Writer;
@@ -34,7 +37,7 @@ class DatasetUploadTest extends TestCase
 
         $dataset = Dataset::sole();
         $response->assertRedirect(route('data.preview', $dataset));
-        $this->assertSame('pending', $dataset->status);
+        $this->assertSame('uploaded', $dataset->status);
         $this->assertSame('csv', $dataset->file_type);
         $this->assertSame('penduduk', $dataset->name);
         $this->assertSame($this->admin->id, $dataset->created_by);
@@ -100,8 +103,9 @@ class DatasetUploadTest extends TestCase
             ->assertDontSee('<td>abaikan</td>', false);
     }
 
-    public function test_confirm_saves_name_and_sheet(): void
+    public function test_confirm_saves_name_and_sheet_and_queues_import(): void
     {
+        Queue::fake([ImportDataset::class]);
         $dataset = $this->uploadXlsx();
 
         $this->post(route('data.confirm', $dataset), ['name' => 'Rekap Bangli', 'sheet' => 'Data'])
@@ -111,6 +115,7 @@ class DatasetUploadTest extends TestCase
         $this->assertSame('Rekap Bangli', $dataset->name);
         $this->assertSame('Data', $dataset->sheet_name);
         $this->assertSame('pending', $dataset->status);
+        Queue::assertPushed(ImportDataset::class, fn (ImportDataset $job) => $job->dataset->is($dataset));
     }
 
     public function test_confirm_rejects_unknown_sheet(): void
@@ -131,7 +136,43 @@ class DatasetUploadTest extends TestCase
             ->assertDontSee('Lanjutkan Import');
     }
 
-    public function test_admin_can_delete_pending_dataset_and_its_file(): void
+    public function test_deleting_imported_dataset_drops_its_data_table(): void
+    {
+        $dataset = Dataset::factory()->create(['table_name' => 'ds_99']);
+        Schema::create('ds_99', fn ($table) => $table->id('_row_id'));
+
+        $this->actingAs($this->admin)
+            ->delete(route('data.destroy', $dataset))
+            ->assertRedirect(route('data'));
+
+        $this->assertModelMissing($dataset);
+        $this->assertFalse(Schema::hasTable('ds_99'));
+    }
+
+    public function test_dataset_being_imported_cannot_be_deleted(): void
+    {
+        $dataset = Dataset::factory()->create(['status' => 'processing']);
+
+        $this->actingAs($this->admin)
+            ->from(route('data'))
+            ->delete(route('data.destroy', $dataset))
+            ->assertRedirect(route('data'))
+            ->assertSessionHas('error', 'Dataset sedang diimpor, tunggu sampai selesai.');
+
+        $this->assertModelExists($dataset);
+    }
+
+    public function test_dataset_name_cannot_break_out_of_delete_confirmation_script(): void
+    {
+        Dataset::factory()->create(['name' => "x'); alert(1); ('"]);
+
+        $this->actingAs($this->admin)
+            ->get(route('data'))
+            ->assertOk()
+            ->assertSee('confirm(\'Hapus dataset x\\u0027); alert(1); (\\u0027?\')', false);
+    }
+
+    public function test_admin_can_delete_uploaded_dataset_and_its_file(): void
     {
         $dataset = $this->upload('penduduk.csv', "nama\nBudi\n");
 

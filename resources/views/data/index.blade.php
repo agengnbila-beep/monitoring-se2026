@@ -35,14 +35,18 @@
                     </h3>
 
                     <p>
-                        @if ($dataset->status === 'pending')
-                            {{ strtoupper($dataset->file_type) }} • menunggu import
-                        @else
+                        @if ($dataset->status === 'done')
                             {{ number_format($dataset->row_count) }}
                             baris
                             •
                             {{ $dataset->column_count }}
                             kolom
+                        @elseif ($dataset->status === 'failed')
+                            <span class="dataset-error">{{ $dataset->error_message }}</span>
+                        @elseif ($dataset->status === 'uploaded')
+                            {{ strtoupper($dataset->file_type) }} • menunggu konfirmasi
+                        @else
+                            {{ strtoupper($dataset->file_type) }} • sedang diproses
                         @endif
                     </p>
 
@@ -57,34 +61,43 @@
 
                     <span class="status status-{{ $dataset->status }}">
 
-                        @if ($dataset->status === 'done')
-                            ✓ Done
-                        @elseif ($dataset->status === 'processing')
-                            ⟳ Processing
-                        @elseif ($dataset->status === 'pending')
-                            ○ Pending
-                        @else
-                            ✕ Failed
-                        @endif
+                        @switch($dataset->status)
+                            @case('done')
+                                ✓ Done
+                                @break
+                            @case('processing')
+                                ⟳ Processing
+                                @break
+                            @case('pending')
+                                ○ Antre
+                                @break
+                            @case('uploaded')
+                                ○ Belum dikonfirmasi
+                                @break
+                            @default
+                                ✕ Failed
+                        @endswitch
 
                     </span>
 
-                    @if ($dataset->status === 'pending')
+                    @if ($dataset->status === 'uploaded')
                         <a href="{{ route('data.preview', $dataset) }}" class="outline-button">
                             Pratinjau
                         </a>
-                    @else
+                    @elseif ($dataset->status === 'done')
                         <button type="button" class="outline-button">
                             Overview
                         </button>
                     @endif
 
-                    <form method="POST" action="{{ route('data.destroy', $dataset) }}"
-                        onsubmit="return confirm('Hapus dataset {{ $dataset->name }}?')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="cancel-button">Hapus</button>
-                    </form>
+                    @unless ($dataset->status === 'processing')
+                        <form method="POST" action="{{ route('data.destroy', $dataset) }}"
+                            onsubmit="return confirm(@js('Hapus dataset '.$dataset->name.'?'))">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="cancel-button">Hapus</button>
+                        </form>
+                    @endunless
 
                 </div>
 
