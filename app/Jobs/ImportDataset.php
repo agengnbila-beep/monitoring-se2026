@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Dataset;
 use App\Services\Import\DatasetImporter;
+use App\Services\Import\DatasetProfiler;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Schema;
@@ -33,11 +34,14 @@ class ImportDataset implements ShouldQueue
 
     public function __construct(public Dataset $dataset) {}
 
-    public function handle(DatasetImporter $importer): void
+    public function handle(DatasetImporter $importer, DatasetProfiler $profiler): void
     {
         $this->dataset->update(['status' => 'processing', 'error_message' => null]);
 
         $importer->import($this->dataset);
+        $profiler->profile($this->dataset);
+
+        $this->dataset->update(['status' => 'done']);
     }
 
     public function failed(?Throwable $exception): void

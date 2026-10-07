@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\DatasetController as ApiDatasetController;
 use App\Http\Controllers\Auth\LoginController as AuthLoginController;
 use App\Http\Controllers\DatasetController;
 use Illuminate\Support\Facades\Route;
@@ -24,5 +25,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/data/{dataset}/preview', [DatasetController::class, 'preview'])->name('data.preview');
         Route::post('/data/{dataset}/confirm', [DatasetController::class, 'confirm'])->name('data.confirm');
         Route::delete('/data/{dataset}', [DatasetController::class, 'destroy'])->name('data.destroy');
+
+        Route::prefix('api')->name('api.')->group(function () {
+            Route::get('/datasets', [ApiDatasetController::class, 'index'])->name('datasets.index');
+            Route::get('/datasets/{dataset}/profile', [ApiDatasetController::class, 'profile'])->name('datasets.profile');
+            Route::get('/datasets/{dataset}/preview', [ApiDatasetController::class, 'preview'])->name('datasets.preview');
+        });
     });
 });

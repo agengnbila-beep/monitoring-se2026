@@ -45,8 +45,6 @@ class DatasetImporter
             'table_name' => $table,
             'row_count' => $rowCount,
             'column_count' => count($names),
-            'status' => 'done',
-            'error_message' => null,
         ]);
     }
 

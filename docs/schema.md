@@ -17,7 +17,7 @@
 | file_size | unsigned bigint | Byte |
 | sheet_name | string, null | Khusus XLSX |
 | table_name | string, null, unique | `ds_{id}`, terisi setelah import |
-| status | string, default `pending` | `pending` / `processing` / `done` / `failed` |
+| status | string, default `pending` | `uploaded` / `pending` / `processing` / `done` / `failed` |
 | error_message | text, null | Diisi bila `failed` |
 | row_count | unsigned bigint, default 0 | (dulu `rows`) |
 | column_count | unsigned int, default 0 | (dulu `columns`) |

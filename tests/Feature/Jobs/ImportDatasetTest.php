@@ -49,6 +49,26 @@ class ImportDatasetTest extends TestCase
         );
     }
 
+    public function test_import_profiles_each_column(): void
+    {
+        Storage::fake('local');
+        $dataset = $this->datasetWithFile('csv', "kecamatan,jumlah\nBangli,5\nAbang,\nBangli,12\n");
+
+        ImportDataset::dispatchSync($dataset);
+
+        $dataset->refresh();
+        $this->assertNotNull($dataset->profiled_at);
+        $this->assertSame(
+            [
+                ['kecamatan', 0, 2, 'Abang', 'Bangli'],
+                ['jumlah', 1, 2, '5', '12'],
+            ],
+            $dataset->columns()->get()
+                ->map(fn ($column) => [$column->name, $column->null_count, $column->unique_count, $column->min_value, $column->max_value])
+                ->all(),
+        );
+    }
+
     public function test_all_rows_are_imported_across_chunk_boundaries(): void
     {
         Storage::fake('local');

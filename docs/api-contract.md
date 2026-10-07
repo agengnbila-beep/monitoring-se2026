@@ -23,7 +23,10 @@ Tanggal ISO 8601. Key `snake_case`.
 }
 ```
 
-`status`: `pending` | `processing` | `done` | `failed`. Frontend polling endpoint ini selama ada dataset `pending`/`processing`.
+`status`: `uploaded` (file diterima, menunggu konfirmasi) | `pending` (antre import) | `processing` | `done` | `failed`.
+Frontend polling endpoint ini selama ada dataset `pending`/`processing`.
+
+Profil dan pratinjau hanya tersedia untuk dataset `done`; selain itu HTTP 409 `{"message": "Dataset belum selesai diimpor."}`.
 
 ## 2. Profil dataset — `GET /api/datasets/{id}/profile`
 
