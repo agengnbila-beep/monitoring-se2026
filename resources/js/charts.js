@@ -12,15 +12,15 @@ import { SVGRenderer } from "echarts/renderers";
 echarts.use([BarChart, LineChart, PieChart, GridComponent, LegendComponent, TooltipComponent, SVGRenderer]);
 
 /**
- * Palet kategorikal tervalidasi (urutan tetap, tidak pernah diputar ulang).
- * Warna ke-3, 4, 5 kontrasnya < 3:1, jadi setiap chart punya tampilan tabel.
+ * Palet kategorikal versi tema gelap, tervalidasi terhadap permukaan kartu #1a1a19
+ * (CVD, normal-vision, dan kontras >= 3:1 lolos). Urutan tetap, tidak diputar ulang.
  */
-const SERIES = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948"];
-const OTHER = "#a3a19b";
-const SURFACE = "#ffffff";
-const TEXT_PRIMARY = "#1f2937";
-const TEXT_SECONDARY = "#6b7280";
-const GRID = "#ebeae6";
+const SERIES = ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300", "#9085e9", "#e66767"];
+const OTHER = "#6f6e67";
+const SURFACE = "#1a1a19";
+const TEXT_PRIMARY = "#f1f0eb";
+const TEXT_SECONDARY = "#c3c2b7";
+const GRID = "#2e2e2b";
 
 const MAX_CATEGORIES = 30;
 const MAX_PIE_SLICES = 6;
