@@ -7,6 +7,7 @@ use App\Http\Requests\SavedQueryRequest;
 use App\Http\Resources\SavedQueryResource;
 use App\Models\Dataset;
 use App\Models\SavedQuery;
+use App\Services\Dashboard\WidgetOptions;
 use App\Services\Query\QueryEngine;
 use App\Services\Query\SavedQueryRunner;
 use Closure;
@@ -34,9 +35,12 @@ class SavedQueryController extends Controller
     {
         $dataset = Dataset::findOrFail($request->integer('dataset_id'));
 
+        $config = $this->config(fn () => $this->engine->normalize($dataset, $request->input('config')));
+
         $savedQuery = SavedQuery::create([
             ...$request->safe()->only('dataset_id', 'name', 'description', 'folder_id'),
-            'config' => $this->config(fn () => $this->engine->normalize($dataset, $request->input('config'))),
+            'config' => $config,
+            'visualization' => $this->visualization($request, $dataset, $config),
             'created_by' => $request->user()->id,
         ]);
 
@@ -52,9 +56,12 @@ class SavedQueryController extends Controller
     {
         $dataset = Dataset::findOrFail($request->integer('dataset_id'));
 
+        $config = $this->config(fn () => $this->engine->normalize($dataset, $request->input('config')));
+
         $savedQuery->update([
             ...$request->safe()->only('dataset_id', 'name', 'description', 'folder_id'),
-            'config' => $this->config(fn () => $this->engine->normalize($dataset, $request->input('config'))),
+            'config' => $config,
+            'visualization' => $this->visualization($request, $dataset, $config),
         ]);
 
         return new SavedQueryResource($savedQuery->load('dataset:id,name'));
@@ -87,6 +94,35 @@ class SavedQueryController extends Controller
     public function runSaved(SavedQuery $savedQuery, SavedQueryRunner $runner): JsonResponse
     {
         return $this->result($runner->run($savedQuery->loadMissing('dataset')));
+    }
+
+    /**
+     * Tampilan pilihan pengguna (jenis chart + opsi) divalidasi seperti opsi
+     * widget, terhadap kolom hasil query, agar pasti bisa dipasang di dashboard.
+     *
+     * @param  array<string, mixed>  $config
+     * @return array{chart_type: string, options: array<string, mixed>}|null
+     *
+     * @throws ValidationException
+     */
+    private function visualization(SavedQueryRequest $request, Dataset $dataset, array $config): ?array
+    {
+        if (! $request->filled('visualization')) {
+            return null;
+        }
+
+        $chartType = $request->input('visualization.chart_type');
+        $columns = $this->engine->outputColumnNames($dataset, $config);
+
+        try {
+            $options = WidgetOptions::validate($chartType, (array) $request->input('visualization.options', []), $columns);
+        } catch (ValidationException $e) {
+            throw ValidationException::withMessages(
+                collect($e->errors())->mapWithKeys(fn (array $messages, string $key) => ["visualization.{$key}" => $messages])->all()
+            );
+        }
+
+        return ['chart_type' => $chartType, 'options' => $options];
     }
 
     /**

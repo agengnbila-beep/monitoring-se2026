@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\SavedQueryResource;
+use App\Models\Dashboard;
 use App\Models\Dataset;
 use App\Models\QueryFolder;
 use App\Models\SavedQuery;
@@ -29,6 +30,7 @@ class QueryPageController extends Controller
             'datasets' => Dataset::where('status', 'done')->whereNotNull('table_name')->orderBy('name')->get(['id', 'name']),
             'savedQuery' => $savedQuery ? (new SavedQueryResource($savedQuery))->resolve($request) : null,
             'folders' => QueryFolder::options(),
+            'dashboards' => Dashboard::orderBy('name')->get(['id', 'name', 'slug']),
             'folderId' => $savedQuery?->folder_id ?? $request->integer('folder') ?: null,
         ]);
     }

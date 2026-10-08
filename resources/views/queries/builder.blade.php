@@ -26,6 +26,8 @@
             data-save-url="{{ route('api.queries.store') }}"
             data-update-url="{{ url('/api/queries/__ID__') }}"
             data-builder-url="{{ route('queries.builder') }}"
+            data-widget-store-url="{{ url('/api/dashboards/__ID__/widgets') }}"
+            data-dashboard-url="{{ url('/dashboards/__SLUG__') }}"
             data-saved-query='@json($savedQuery)'>
 
             <section class="qb-panel">
@@ -91,6 +93,55 @@
                         <span id="qbPage"></span>
                         <button type="button" class="outline-button" id="qbNext">Berikutnya ›</button>
                     </div>
+                </section>
+
+                <section class="qb-panel" id="qbViz" hidden>
+                    <h2 class="section-title">6. Tampilan di dashboard</h2>
+                    <p class="qb-hint">Pratinjau persis seperti widget di dashboard. Pilihan ini ikut tersimpan.</p>
+
+                    <div class="qb-viz">
+                        <div class="qb-viz-form">
+                            <label class="dash-field">
+                                <span>Bentuk</span>
+                                <select id="qbVizType" class="qb-input" aria-label="Bentuk tampilan"></select>
+                            </label>
+                            <div id="qbVizOptions"></div>
+                        </div>
+
+                        <article class="widget-card qb-viz-preview" aria-label="Pratinjau widget">
+                            <header class="widget-header">
+                                <h3 id="qbVizTitle">Pratinjau</h3>
+                            </header>
+                            <div class="widget-body" id="qbVizPreview"></div>
+                            <p class="widget-note" id="qbVizNote" hidden></p>
+                        </article>
+                    </div>
+
+                    <div class="qb-add-dashboard">
+                        <label class="dash-field">
+                            <span>Dashboard</span>
+                            <select id="qbDashboard" class="qb-input" aria-label="Dashboard tujuan">
+                                @foreach ($dashboards as $dashboard)
+                                    <option value="{{ $dashboard->id }}" data-slug="{{ $dashboard->slug }}">{{ $dashboard->name }}</option>
+                                @endforeach
+                            </select>
+                        </label>
+                        <label class="dash-field">
+                            <span>Lebar</span>
+                            <select id="qbWidth" class="qb-input" aria-label="Lebar widget">
+                                <option value="3">1/4</option>
+                                <option value="4">1/3</option>
+                                <option value="6" selected>1/2</option>
+                                <option value="8">2/3</option>
+                                <option value="12">Penuh</option>
+                            </select>
+                        </label>
+                        <button type="button" id="qbAddToDashboard" @disabled($dashboards->isEmpty())>Tampilkan di dashboard</button>
+                    </div>
+                    @if ($dashboards->isEmpty())
+                        <p class="qb-hint">Belum ada dashboard. Buat dulu di menu Dashboard.</p>
+                    @endif
+                    <div class="alert alert-success" id="qbAdded" hidden></div>
                 </section>
 
                 <section class="qb-panel">

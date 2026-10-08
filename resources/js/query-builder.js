@@ -4,6 +4,8 @@
 // menjalankannya ke /api/queries/run, dan menyimpannya sebagai saved query.
 // =========================
 
+import { CHART_TYPES, readOptionsForm, renderOptionsForm, suggestChartType } from "./widget-options";
+
 const FUNCTIONS = [
     { value: "count", label: "Jumlah baris (count)" },
     { value: "sum", label: "Total (sum)" },
@@ -39,6 +41,8 @@ export function initQueryBuilder(root) {
         savedQueryId: null,
         result: null,
         page: 0,
+        // Tampilan tersimpan (jenis chart + opsi) dari saved query yang sedang diedit.
+        viz: null,
     };
 
     // ---------- helpers ----------
@@ -352,7 +356,7 @@ export function initQueryBuilder(root) {
             return;
         }
 
-        state.result = { columns: response.data.data.columns, rows: response.data.data.rows };
+        state.result = { columns: response.data.data.columns, rows: response.data.data.rows, meta: response.data.meta };
         state.page = 0;
 
         const meta = response.data.meta;
@@ -364,6 +368,79 @@ export function initQueryBuilder(root) {
         el("qbResult").hidden = false;
         el("qbExport").disabled = false;
         renderPage();
+        renderViz();
+    };
+
+    // ---------- tampilan di dashboard ----------
+
+    const vizType = el("qbVizType");
+    const vizOptions = el("qbVizOptions");
+    CHART_TYPES.forEach((t) => vizType.append(new Option(t.label, t.value)));
+
+    const currentViz = () => ({ chart_type: vizType.value, options: readOptionsForm(vizOptions, vizType.value) });
+
+    const renderPreview = async () => {
+        const { renderWidget } = await import("./charts");
+        const { note } = renderWidget(el("qbVizPreview"), currentViz(), state.result);
+        el("qbVizTitle").textContent = el("qbName").value.trim() || "Pratinjau";
+        el("qbVizNote").textContent = note ?? "";
+        el("qbVizNote").hidden = !note;
+    };
+
+    /**
+     * Setelah query dijalankan: pakai tampilan tersimpan bila masih cocok,
+     * selain itu tebak bentuk yang wajar dari hasil query.
+     */
+    const renderViz = () => {
+        const names = state.result.columns.map((c) => c.name);
+        const saved = state.viz;
+        const savedFits = saved && Object.values(saved.options).flat().every((v) => typeof v !== "string" || names.includes(v) || ["number", "percent"].includes(v));
+
+        if (!el("qbViz").dataset.touched) {
+            vizType.value = savedFits ? saved.chart_type : suggestChartType(state.result.columns, state.result.rows);
+        }
+        renderOptionsForm(vizOptions, vizType.value, state.result.columns, savedFits && saved.chart_type === vizType.value ? saved.options : {});
+        el("qbViz").hidden = false;
+        renderPreview();
+    };
+
+    vizType.addEventListener("change", () => {
+        el("qbViz").dataset.touched = "1";
+        renderOptionsForm(vizOptions, vizType.value, state.result.columns, {});
+        renderPreview();
+    });
+    vizOptions.addEventListener("change", renderPreview);
+
+    const addToDashboard = async () => {
+        el("qbAdded").hidden = true;
+
+        // Widget membutuhkan saved query: simpan dulu (sekaligus menyimpan tampilan).
+        if (!(await save())) {
+            return;
+        }
+
+        const dashboard = el("qbDashboard").selectedOptions[0];
+        const viz = currentViz();
+        const response = await request(root.dataset.widgetStoreUrl.replace("__ID__", dashboard.value), "POST", {
+            saved_query_id: state.savedQueryId,
+            title: el("qbName").value.trim(),
+            chart_type: viz.chart_type,
+            options: viz.options,
+            width: Number(el("qbWidth").value),
+            sort_order: 999,
+        });
+
+        if (!response.ok) {
+            showErrors(errorMessages(response));
+            return;
+        }
+
+        const link = Object.assign(document.createElement("a"), {
+            href: root.dataset.dashboardUrl.replace("__SLUG__", dashboard.dataset.slug),
+            textContent: `Buka dashboard "${dashboard.textContent}"`,
+        });
+        el("qbAdded").replaceChildren(`Ditambahkan ke dashboard. `, link);
+        el("qbAdded").hidden = false;
     };
 
     // ---------- ekspor CSV ----------
@@ -407,6 +484,7 @@ export function initQueryBuilder(root) {
             description: el("qbDescription").value.trim() || null,
             folder_id: Number(el("qbFolder").value) || null,
             config: readConfig(),
+            visualization: state.result ? currentViz() : state.viz,
         };
 
         const response = state.savedQueryId
@@ -415,13 +493,16 @@ export function initQueryBuilder(root) {
 
         if (!response.ok) {
             showErrors(errorMessages(response));
-            return;
+            return false;
         }
 
         state.savedQueryId = response.data.data.id;
+        state.viz = response.data.data.visualization;
         history.replaceState(null, "", `${root.dataset.builderUrl}?query=${state.savedQueryId}`);
         el("qbSaved").textContent = `"${response.data.data.name}" tersimpan di Analitik.`;
         el("qbSaved").hidden = false;
+
+        return true;
     };
 
     // ---------- event ----------
@@ -438,6 +519,7 @@ export function initQueryBuilder(root) {
     el("qbRun").addEventListener("click", run);
     el("qbExport").addEventListener("click", exportCsv);
     el("qbSave").addEventListener("click", save);
+    el("qbAddToDashboard").addEventListener("click", addToDashboard);
     el("qbPrev").addEventListener("click", () => {
         state.page--;
         renderPage();
@@ -455,6 +537,8 @@ export function initQueryBuilder(root) {
         el("qbDataset").value = saved.dataset_id;
         el("qbName").value = saved.name;
         el("qbDescription").value = saved.description ?? "";
-        loadDataset(String(saved.dataset_id), saved.config);
+        state.viz = saved.visualization;
+        // Langsung jalankan agar pratinjau tampilan terlihat saat mengedit.
+        loadDataset(String(saved.dataset_id), saved.config).then(() => state.columns.length && run());
     }
 }

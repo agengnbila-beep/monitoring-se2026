@@ -25,6 +25,7 @@ class SavedQueryResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'config' => $this->config,
+            'visualization' => $this->visualization,
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

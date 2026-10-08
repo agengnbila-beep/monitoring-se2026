@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Services\Dashboard\WidgetOptions;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class SavedQueryRequest extends FormRequest
 {
@@ -29,6 +31,9 @@ class SavedQueryRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:1000'],
             'config' => ['present', 'array'],
             'folder_id' => ['nullable', 'integer', 'exists:query_folders,id'],
+            'visualization' => ['nullable', 'array'],
+            'visualization.chart_type' => ['required_with:visualization', Rule::in(WidgetOptions::CHART_TYPES)],
+            'visualization.options' => ['sometimes', 'array'],
         ];
     }
 

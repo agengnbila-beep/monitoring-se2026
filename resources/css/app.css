@@ -1534,3 +1534,36 @@ form + .section-title,
     font-size: 14px;
     padding: 10px 16px;
 }
+
+/* ===== Pratinjau tampilan Filter Data ===== */
+.qb-viz {
+    display: grid;
+    grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+    margin-bottom: 16px;
+}
+
+.qb-viz .qb-viz-preview {
+    grid-column: auto;
+    min-height: 200px;
+}
+
+.qb-add-dashboard {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-end;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+}
+
+.qb-add-dashboard .dash-field {
+    margin-bottom: 0;
+}
+
+@media (max-width: 900px) {
+    .qb-viz {
+        grid-template-columns: 1fr;
+    }
+}

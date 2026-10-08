@@ -23,6 +23,7 @@ class SavedQuery extends Model
         'name',
         'description',
         'config',
+        'visualization',
         'created_by',
     ];
 
@@ -30,6 +31,7 @@ class SavedQuery extends Model
     {
         return [
             'config' => 'array',
+            'visualization' => 'array',
         ];
     }
 

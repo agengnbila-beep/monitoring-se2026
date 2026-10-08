@@ -145,7 +145,9 @@ Cache otomatis tidak terpakai lagi saat dataset diimpor ulang atau kolomnya diub
 | PUT | `/api/queries/{id}` | Body sama dengan POST |
 | DELETE | `/api/queries/{id}` | 204; 409 bila masih dipakai widget |
 
-`config` disimpan dalam bentuk ternormalisasi (semua key terisi). Error validasi
+Body juga menerima `folder_id` (folder Analitik) dan `visualization`
+(`{ "chart_type", "options" }`, aturan sama dengan opsi widget bagian 6; error berawalan
+`visualization.`). `config` disimpan dalam bentuk ternormalisasi (semua key terisi). Error validasi
 `config` memakai key berawalan `config.`, contoh `config.select.0`.
 
 ```json
@@ -244,10 +246,13 @@ Membaca tabel lain (users, sessions, sqlite_master), menulis, PRAGMA, ATTACH, da
 
 | Method | URL | Keterangan |
 |---|---|---|
-| GET | `/api/sql/tree` | `{ "data": { "folders": [{id, name, parent_id}], "files": [{id, name, folder_id, updated_at}] } }` |
 | POST | `/api/sql/run` | Body `{ "sql", "limit"? }` → format sama dengan bagian 5 |
-| POST/PUT/DELETE | `/api/sql/folders[/{id}]` | Body `{ "name", "parent_id"? }`; hapus hanya bila kosong (409) |
-| POST/GET/PUT/DELETE | `/api/sql/files[/{id}]` | Body `{ "name", "description"?, "folder_id"?, "sql" }`; SQL dicoba dijalankan sebelum disimpan (422 bila gagal); hapus 409 bila dipakai widget |
+| POST/GET/PUT | `/api/sql/files[/{id}]` | Body `{ "name", "description"?, "folder_id"?, "sql" }`; SQL dicoba dijalankan sebelum disimpan (422 bila gagal) |
+
+Folder dan file analitik (kedua jenis) dikelola di `/api/analitik`:
+`POST/PUT/DELETE /api/analitik/folders[/{id}]` (hapus hanya bila kosong, 409),
+`PUT /api/analitik/files/{id}/folder` (`{ "folder_id" }`), dan
+`DELETE /api/analitik/files/{id}` (409 bila dipakai widget).
 
 File SQL bisa dipakai sebagai widget dashboard. Filter global diterapkan dengan
 membungkus SQL: `SELECT * FROM (<sql>) AS hasil WHERE "key" = ?` bila hasil query

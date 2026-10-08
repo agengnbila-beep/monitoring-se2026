@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Dashboard;
 use App\Models\Dataset;
 use App\Models\SavedQuery;
 use App\Models\User;
@@ -41,6 +42,18 @@ class QueryPageTest extends TestCase
             ->assertSee('data-insert="'.$dataset->table_name.'"', false)
             ->assertSee('data-insert="kecamatan"', false)
             ->assertDontSee('Belum Siap');
+    }
+
+    public function test_builder_offers_dashboards_for_add_to_dashboard(): void
+    {
+        $dashboard = Dashboard::factory()->create(['name' => 'Monitoring', 'slug' => 'monitoring']);
+        $this->importedDataset(['kecamatan' => 'text'], []);
+
+        $this->actingAs(User::factory()->admin()->create())
+            ->get(route('queries.builder'))
+            ->assertOk()
+            ->assertSee('<option value="'.$dashboard->id.'" data-slug="monitoring">Monitoring</option>', false)
+            ->assertSee('Tampilkan di dashboard');
     }
 
     public function test_builder_offers_only_imported_datasets(): void

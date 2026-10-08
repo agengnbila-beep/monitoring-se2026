@@ -5,14 +5,7 @@
 // =========================
 
 import { errorMessages, request } from "./http";
-
-const CHART_TYPES = [
-    { value: "kpi", label: "Angka (KPI)" },
-    { value: "bar", label: "Batang (bar)" },
-    { value: "line", label: "Garis (line)" },
-    { value: "pie", label: "Donat (pie)" },
-    { value: "table", label: "Tabel" },
-];
+import { CHART_TYPES, field, make, readOptionsForm, renderOptionsForm, selectOf } from "./widget-options";
 
 const WIDTHS = [
     { value: 3, label: "1/4" },
@@ -21,21 +14,6 @@ const WIDTHS = [
     { value: 8, label: "2/3" },
     { value: 12, label: "Penuh" },
 ];
-
-const make = (tag, props = {}, children = []) => {
-    const node = Object.assign(document.createElement(tag), props);
-    node.append(...children);
-    return node;
-};
-
-const selectOf = (options, current, ariaLabel) => {
-    const node = make("select", { className: "qb-input" });
-    node.setAttribute("aria-label", ariaLabel);
-    options.forEach((o) => node.append(make("option", { value: o.value, textContent: o.label, selected: String(o.value) === String(current) })));
-    return node;
-};
-
-const field = (label, control) => make("label", { className: "dash-field" }, [make("span", { textContent: label }), control]);
 
 const reloadInEditMode = () => {
     const url = new URL(window.location.href);
@@ -159,88 +137,8 @@ export function initDashboardEditor(root, view) {
     const optionsArea = make("div", { className: "dash-options" });
     const formTitle = make("h2", { className: "section-title" });
 
-    const numericColumns = () => resultColumns.filter((c) => c.type === "integer" || c.type === "decimal");
-    const columnOptions = (columns) => columns.map((c) => ({ value: c.name, label: c.label }));
-
-    const checkboxes = (columns, checked, name) =>
-        make(
-            "div",
-            { className: "qb-checks" },
-            columns.map((c) =>
-                make("label", { className: "qb-check" }, [
-                    make("input", { type: "checkbox", value: c.name, name, checked: checked.includes(c.name) }),
-                    ` ${c.label}`,
-                ]),
-            ),
-        );
-
-    /** Isian opsi menyesuaikan jenis chart dan kolom hasil query. */
-    const renderOptions = (options = {}) => {
-        optionsArea.replaceChildren();
-
-        if (resultColumns.length === 0) {
-            optionsArea.append(make("p", { className: "qb-hint", textContent: "Pilih saved query untuk melihat kolomnya." }));
-            return;
-        }
-
-        const numbers = numericColumns();
-        const all = columnOptions(resultColumns);
-
-        switch (typeField.value) {
-            case "kpi":
-                optionsArea.append(
-                    field("Nilai", selectOf(columnOptions(numbers.length ? numbers : resultColumns), options.value, "Kolom nilai")),
-                    field("Format", selectOf([{ value: "number", label: "Angka" }, { value: "percent", label: "Persen" }], options.format ?? "number", "Format")),
-                );
-                break;
-            case "bar":
-            case "line":
-                optionsArea.append(
-                    field("Sumbu X (kategori)", selectOf(all, options.x ?? resultColumns[0].name, "Sumbu X")),
-                    make("div", { className: "dash-field" }, [
-                        make("span", { textContent: "Nilai (sumbu Y)" }),
-                        checkboxes(numbers.length ? numbers : resultColumns, options.y ?? [numbers[0]?.name].filter(Boolean), "y"),
-                    ]),
-                );
-                if (typeField.value === "bar") {
-                    optionsArea.append(
-                        make("label", { className: "qb-check" }, [make("input", { type: "checkbox", name: "stacked", checked: !!options.stacked }), " Tumpuk (stacked)"]),
-                    );
-                }
-                break;
-            case "pie":
-                optionsArea.append(
-                    field("Label potongan", selectOf(all, options.label ?? resultColumns[0].name, "Label")),
-                    field("Nilai", selectOf(columnOptions(numbers.length ? numbers : resultColumns), options.value, "Nilai")),
-                );
-                break;
-            case "table":
-                optionsArea.append(
-                    make("div", { className: "dash-field" }, [
-                        make("span", { textContent: "Kolom yang ditampilkan" }),
-                        checkboxes(resultColumns, options.columns ?? resultColumns.map((c) => c.name), "columns"),
-                    ]),
-                );
-                break;
-        }
-    };
-
-    const readOptions = () => {
-        const selects = [...optionsArea.querySelectorAll("select")];
-        const checked = (name) => [...optionsArea.querySelectorAll(`input[name="${name}"]:checked`)].map((i) => i.value);
-
-        switch (typeField.value) {
-            case "kpi":
-                return { value: selects[0].value, format: selects[1].value };
-            case "bar":
-            case "line":
-                return { x: selects[0].value, y: checked("y"), stacked: !!optionsArea.querySelector('input[name="stacked"]')?.checked };
-            case "pie":
-                return { label: selects[0].value, value: selects[1].value };
-            default:
-                return { columns: checked("columns") };
-        }
-    };
+    const renderOptions = (options = {}) => renderOptionsForm(optionsArea, typeField.value, resultColumns, options);
+    const readOptions = () => readOptionsForm(optionsArea, typeField.value);
 
     const loadColumns = async (options = {}) => {
         resultColumns = [];
@@ -260,10 +158,17 @@ export function initDashboardEditor(root, view) {
     };
 
     queryField.addEventListener("change", () => {
+        const query = queries.find((q) => String(q.id) === queryField.value);
         if (!titleField.value) {
-            titleField.value = queries.find((q) => String(q.id) === queryField.value)?.name ?? "";
+            titleField.value = query?.name ?? "";
         }
-        loadColumns();
+        // Pakai tampilan yang sudah dipilih saat menyusun Filter Data, bila ada.
+        if (query?.visualization) {
+            typeField.value = query.visualization.chart_type;
+            loadColumns(query.visualization.options);
+        } else {
+            loadColumns();
+        }
     });
     typeField.addEventListener("change", () => renderOptions());
 

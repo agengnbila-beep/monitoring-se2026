@@ -57,6 +57,38 @@ class SavedQueryApiTest extends TestCase
         $this->assertSame($admin->id, $savedQuery->created_by);
     }
 
+    public function test_visualization_is_validated_and_saved_with_the_query(): void
+    {
+        $dataset = $this->penduduk();
+
+        $this->actingAs(User::factory()->admin()->create())
+            ->postJson('/api/queries', [
+                'dataset_id' => $dataset->id,
+                'name' => 'KRT per kecamatan',
+                'config' => self::COUNT_PER_KECAMATAN,
+                'visualization' => ['chart_type' => 'bar', 'options' => ['x' => 'kecamatan', 'y' => ['jumlah'], 'warna' => 'merah']],
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.visualization', ['chart_type' => 'bar', 'options' => ['x' => 'kecamatan', 'y' => ['jumlah'], 'stacked' => false]]);
+    }
+
+    public function test_visualization_must_reference_query_result_columns(): void
+    {
+        $dataset = $this->penduduk();
+
+        $this->actingAs(User::factory()->admin()->create())
+            ->postJson('/api/queries', [
+                'dataset_id' => $dataset->id,
+                'name' => 'KRT per kecamatan',
+                'config' => self::COUNT_PER_KECAMATAN,
+                'visualization' => ['chart_type' => 'pie', 'options' => ['label' => 'desa', 'value' => 'jumlah']],
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['visualization.options.label' => "Kolom 'desa' tidak ada di hasil query."]);
+
+        $this->assertDatabaseCount('saved_queries', 0);
+    }
+
     public function test_invalid_config_is_rejected_with_config_prefixed_errors(): void
     {
         $dataset = $this->penduduk();
