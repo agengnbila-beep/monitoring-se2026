@@ -7,7 +7,7 @@
 @section('content')
 
     <div class="page-header">
-        <a href="{{ route('queries.index') }}" class="back-link">← Semua filter data</a>
+        <a href="{{ route('analitik.index', array_filter(['folder' => $folderId])) }}" class="back-link">← Analitik</a>
 
         <h1>{{ $savedQuery ? 'Edit: '.$savedQuery['name'] : 'Filter Data Baru' }}</h1>
 
@@ -99,6 +99,12 @@
                     <div class="qb-save">
                         <input type="text" id="qbName" class="qb-input" placeholder="Nama, mis. Jumlah KRT per kecamatan" maxlength="255" aria-label="Nama filter data">
                         <input type="text" id="qbDescription" class="qb-input" placeholder="Deskripsi (opsional)" maxlength="1000" aria-label="Deskripsi">
+                        <select id="qbFolder" class="qb-input" aria-label="Folder di Analitik">
+                            <option value="">(Akar Analitik)</option>
+                            @foreach ($folders as $option)
+                                <option value="{{ $option['id'] }}" @selected($option['id'] === $folderId)>📁 {{ $option['label'] }}</option>
+                            @endforeach
+                        </select>
                         <button type="button" id="qbSave">Simpan</button>
                     </div>
 

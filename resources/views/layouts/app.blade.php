@@ -27,22 +27,28 @@
 
             <nav>
 
-                <a href="{{ route('dashboard') }}">
+                <a href="{{ route('dashboard') }}" @class(['active' => request()->routeIs('dashboard', 'dashboards.*')])>
                     Dashboard
                 </a>
 
                 @can('admin')
-                    <a href="{{ route('data') }}">
+                    <a href="{{ route('data') }}" @class(['active' => request()->routeIs('data', 'data.*')])>
                         Data
                     </a>
 
-                    <a href="{{ route('queries.index') }}">
-                        Filter Data
+                    <a href="{{ route('analitik.index') }}" @class(['active' => request()->routeIs('analitik.*')])>
+                        Analitik
                     </a>
 
-                    <a href="{{ route('sql.index') }}">
-                        SQL
-                    </a>
+                    <div class="nav-sub">
+                        <a href="{{ route('queries.builder') }}" @class(['active' => request()->routeIs('queries.*')])>
+                            Filter Data
+                        </a>
+
+                        <a href="{{ route('sql.index') }}" @class(['active' => request()->routeIs('sql.*')])>
+                            SQL
+                        </a>
+                    </div>
                 @endcan
 
             </nav>

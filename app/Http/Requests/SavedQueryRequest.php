@@ -28,6 +28,7 @@ class SavedQueryRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
             'config' => ['present', 'array'],
+            'folder_id' => ['nullable', 'integer', 'exists:query_folders,id'],
         ];
     }
 

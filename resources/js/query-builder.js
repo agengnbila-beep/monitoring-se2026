@@ -405,6 +405,7 @@ export function initQueryBuilder(root) {
             dataset_id: Number(state.datasetId),
             name: el("qbName").value.trim(),
             description: el("qbDescription").value.trim() || null,
+            folder_id: Number(el("qbFolder").value) || null,
             config: readConfig(),
         };
 
@@ -419,7 +420,7 @@ export function initQueryBuilder(root) {
 
         state.savedQueryId = response.data.data.id;
         history.replaceState(null, "", `${root.dataset.builderUrl}?query=${state.savedQueryId}`);
-        el("qbSaved").textContent = `"${response.data.data.name}" tersimpan.`;
+        el("qbSaved").textContent = `"${response.data.data.name}" tersimpan di Analitik.`;
         el("qbSaved").hidden = false;
     };
 

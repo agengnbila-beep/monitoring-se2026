@@ -4,15 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Dataset;
 use App\Models\DatasetColumn;
+use App\Models\QueryFolder;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class SqlPageController extends Controller
 {
     /**
-     * Editor SQL dengan penjelajah folder. Daftar tabel dataset ikut dikirim
-     * sebagai referensi nama tabel (ds_{id}) dan kolomnya.
+     * Sub-menu SQL di Analitik: editor dengan panel kumpulan tabel dataset
+     * (nama tabel ds_{id} dan kolomnya). File dan folder dikelola di Analitik.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
         $datasets = Dataset::with('columns')
             ->where('status', 'done')
@@ -26,6 +28,10 @@ class SqlPageController extends Controller
                 'columns' => $dataset->columns->map(fn (DatasetColumn $column) => $column->only('name', 'type'))->all(),
             ]);
 
-        return view('sql.index', ['datasets' => $datasets]);
+        return view('sql.index', [
+            'datasets' => $datasets,
+            'folders' => QueryFolder::options(),
+            'folderId' => $request->integer('folder') ?: null,
+        ]);
     }
 }

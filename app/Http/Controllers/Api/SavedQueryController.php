@@ -35,7 +35,7 @@ class SavedQueryController extends Controller
         $dataset = Dataset::findOrFail($request->integer('dataset_id'));
 
         $savedQuery = SavedQuery::create([
-            ...$request->safe()->only('dataset_id', 'name', 'description'),
+            ...$request->safe()->only('dataset_id', 'name', 'description', 'folder_id'),
             'config' => $this->config(fn () => $this->engine->normalize($dataset, $request->input('config'))),
             'created_by' => $request->user()->id,
         ]);
@@ -53,7 +53,7 @@ class SavedQueryController extends Controller
         $dataset = Dataset::findOrFail($request->integer('dataset_id'));
 
         $savedQuery->update([
-            ...$request->safe()->only('dataset_id', 'name', 'description'),
+            ...$request->safe()->only('dataset_id', 'name', 'description', 'folder_id'),
             'config' => $this->config(fn () => $this->engine->normalize($dataset, $request->input('config'))),
         ]);
 

@@ -46,4 +46,43 @@ class QueryFolder extends Model
 
         return false;
     }
+
+    /**
+     * Semua folder sebagai pilihan dropdown, label berupa jalur lengkap
+     * ("Monitoring / Per kecamatan"), diurutkan menurut jalur.
+     *
+     * @return list<array{id: int, label: string}>
+     */
+    public static function options(): array
+    {
+        $folders = self::query()->get(['id', 'name', 'parent_id'])->keyBy('id');
+
+        return $folders
+            ->map(function (self $folder) use ($folders) {
+                $names = [];
+                for ($current = $folder; $current !== null; $current = $folders->get($current->parent_id)) {
+                    array_unshift($names, $current->name);
+                }
+
+                return ['id' => $folder->id, 'label' => implode(' / ', $names)];
+            })
+            ->sortBy('label', SORT_NATURAL | SORT_FLAG_CASE)
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Rantai folder dari akar sampai folder ini, untuk breadcrumb.
+     *
+     * @return list<self>
+     */
+    public function ancestry(): array
+    {
+        $chain = [];
+        for ($current = $this; $current !== null; $current = $current->parent) {
+            array_unshift($chain, $current);
+        }
+
+        return $chain;
+    }
 }

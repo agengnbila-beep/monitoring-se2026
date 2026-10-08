@@ -6,7 +6,6 @@ use App\Models\Dashboard;
 use App\Models\QueryFolder;
 use App\Models\SavedQuery;
 use App\Models\User;
-use App\Models\Widget;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Concerns\UsesSqlFixtureDatabase;
 use Tests\TestCase;
@@ -44,61 +43,6 @@ class SqlApiTest extends TestCase
             ->assertJsonValidationErrors(['sql' => "Tabel 'users' tidak boleh dibaca. Mode SQL hanya bisa membaca tabel dataset (ds_…)."]);
     }
 
-    public function test_folders_nest_and_tree_lists_folders_and_files(): void
-    {
-        $this->sqlFixture();
-        $this->actingAs(User::factory()->admin()->create());
-
-        $parent = $this->postJson('/api/sql/folders', ['name' => 'Monitoring'])->assertCreated()->json('data.id');
-        $child = $this->postJson('/api/sql/folders', ['name' => 'Per kecamatan', 'parent_id' => $parent])->assertCreated()->json('data.id');
-        $this->postJson('/api/sql/files', ['name' => 'Jumlah', 'folder_id' => $child, 'sql' => 'SELECT COUNT(*) AS n FROM ds_1'])->assertCreated();
-
-        $this->getJson('/api/sql/tree')
-            ->assertOk()
-            ->assertJsonPath('data.folders', [
-                ['id' => $parent, 'name' => 'Monitoring', 'parent_id' => null],
-                ['id' => $child, 'name' => 'Per kecamatan', 'parent_id' => $parent],
-            ])
-            ->assertJsonPath('data.files.0.name', 'Jumlah')
-            ->assertJsonPath('data.files.0.folder_id', $child);
-    }
-
-    public function test_folder_cannot_be_moved_into_its_own_child(): void
-    {
-        $parent = QueryFolder::factory()->create();
-        $child = QueryFolder::factory()->create(['parent_id' => $parent->id]);
-
-        $this->actingAs(User::factory()->admin()->create())
-            ->putJson("/api/sql/folders/{$parent->id}", ['name' => $parent->name, 'parent_id' => $child->id])
-            ->assertUnprocessable()
-            ->assertJsonPath('message', 'Folder tidak bisa dipindah ke dalam dirinya sendiri.');
-
-        $this->assertNull($parent->refresh()->parent_id);
-    }
-
-    public function test_folder_with_content_cannot_be_deleted(): void
-    {
-        $folder = QueryFolder::factory()->create();
-        SavedQuery::factory()->sql()->create(['folder_id' => $folder->id]);
-
-        $this->actingAs(User::factory()->admin()->create())
-            ->deleteJson("/api/sql/folders/{$folder->id}")
-            ->assertConflict();
-
-        $this->assertModelExists($folder);
-    }
-
-    public function test_empty_folder_can_be_deleted(): void
-    {
-        $folder = QueryFolder::factory()->create();
-
-        $this->actingAs(User::factory()->admin()->create())
-            ->deleteJson("/api/sql/folders/{$folder->id}")
-            ->assertNoContent();
-
-        $this->assertModelMissing($folder);
-    }
-
     public function test_file_with_invalid_sql_is_not_saved(): void
     {
         $this->sqlFixture();
@@ -134,17 +78,6 @@ class SqlApiTest extends TestCase
         $this->actingAs(User::factory()->admin()->create())
             ->getJson("/api/sql/files/{$builder->id}")
             ->assertNotFound();
-    }
-
-    public function test_file_used_by_widget_cannot_be_deleted(): void
-    {
-        $file = SavedQuery::factory()->sql()->create();
-        Widget::factory()->create(['saved_query_id' => $file->id]);
-
-        $this->actingAs(User::factory()->admin()->create())
-            ->deleteJson("/api/sql/files/{$file->id}")
-            ->assertConflict()
-            ->assertJsonPath('message', 'File SQL masih dipakai widget dashboard.');
     }
 
     public function test_sql_file_works_as_dashboard_widget_with_global_filter(): void

@@ -21,6 +21,7 @@ class SavedQueryResource extends JsonResource
             'type' => $this->type,
             'dataset_id' => $this->dataset_id,
             'dataset_name' => $this->whenLoaded('dataset', fn () => $this->dataset?->name),
+            'folder_id' => $this->folder_id,
             'name' => $this->name,
             'description' => $this->description,
             'config' => $this->config,

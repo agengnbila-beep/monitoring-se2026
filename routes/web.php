@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\AnalyticsPageController;
+use App\Http\Controllers\Api\AnalyticsController;
 use App\Http\Controllers\Api\DashboardController as ApiDashboardController;
 use App\Http\Controllers\Api\DatasetController as ApiDatasetController;
 use App\Http\Controllers\Api\SavedQueryController;
@@ -44,10 +46,9 @@ Route::middleware('auth')->group(function () {
         Route::patch('/data/{dataset}/columns', [DatasetColumnController::class, 'update'])->name('data.columns.update');
         Route::delete('/data/{dataset}', [DatasetController::class, 'destroy'])->name('data.destroy');
 
-        Route::get('/queries', [QueryPageController::class, 'index'])->name('queries.index');
+        Route::get('/analitik', [AnalyticsPageController::class, 'index'])->name('analitik.index');
+        Route::redirect('/queries', '/analitik')->name('queries.index');
         Route::get('/queries/builder', [QueryPageController::class, 'builder'])->name('queries.builder');
-        Route::delete('/queries/{savedQuery}', [QueryPageController::class, 'destroy'])->name('queries.destroy');
-
         Route::get('/sql', [SqlPageController::class, 'index'])->name('sql.index');
 
         Route::prefix('api')->name('api.')->group(function () {
@@ -62,15 +63,18 @@ Route::middleware('auth')->group(function () {
             Route::apiResource('queries', SavedQueryController::class)->parameters(['queries' => 'savedQuery']);
 
             Route::prefix('sql')->name('sql.')->group(function () {
-                Route::get('/tree', [SqlController::class, 'tree'])->name('tree');
                 Route::post('/run', [SqlController::class, 'run'])->middleware('throttle:queries')->name('run');
-                Route::post('/folders', [SqlController::class, 'storeFolder'])->name('folders.store');
-                Route::put('/folders/{folder}', [SqlController::class, 'updateFolder'])->name('folders.update');
-                Route::delete('/folders/{folder}', [SqlController::class, 'destroyFolder'])->name('folders.destroy');
                 Route::post('/files', [SqlController::class, 'storeFile'])->name('files.store');
                 Route::get('/files/{savedQuery}', [SqlController::class, 'showFile'])->name('files.show');
                 Route::put('/files/{savedQuery}', [SqlController::class, 'updateFile'])->name('files.update');
-                Route::delete('/files/{savedQuery}', [SqlController::class, 'destroyFile'])->name('files.destroy');
+            });
+
+            Route::prefix('analitik')->name('analitik.')->group(function () {
+                Route::post('/folders', [AnalyticsController::class, 'storeFolder'])->name('folders.store');
+                Route::put('/folders/{folder}', [AnalyticsController::class, 'updateFolder'])->name('folders.update');
+                Route::delete('/folders/{folder}', [AnalyticsController::class, 'destroyFolder'])->name('folders.destroy');
+                Route::put('/files/{savedQuery}/folder', [AnalyticsController::class, 'moveFile'])->name('files.move');
+                Route::delete('/files/{savedQuery}', [AnalyticsController::class, 'destroyFile'])->name('files.destroy');
             });
 
             Route::apiResource('dashboards', ApiDashboardController::class)->only(['store', 'update', 'destroy']);

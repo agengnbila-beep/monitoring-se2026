@@ -204,4 +204,14 @@ document.addEventListener("DOMContentLoaded", function () {
     if (sqlApp) {
         import("./sql-editor").then(({ initSqlEditor }) => initSqlEditor(sqlApp));
     }
+
+    // =========================
+    // ANALITIK
+    // =========================
+
+    const analyticsRoot = document.getElementById("analyticsRoot");
+
+    if (analyticsRoot) {
+        import("./analytics").then(({ initAnalytics }) => initAnalytics(analyticsRoot));
+    }
 });

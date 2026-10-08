@@ -1,6 +1,7 @@
 // =========================
-// MODE SQL (mirip Metabase)
-// Penjelajah folder + file SQL, editor, eksekusi read-only, simpan, ekspor CSV.
+// SUB-MENU SQL (Analitik)
+// Editor, eksekusi read-only, simpan ke folder Analitik, ekspor CSV.
+// Panel kiri berisi tabel dataset; file dan folder dikelola di laman Analitik.
 // =========================
 
 import { errorMessages, request } from "./http";
@@ -31,10 +32,6 @@ export function initSqlEditor(root) {
     const folderSelect = el("sqlFolder");
 
     const state = {
-        folders: [],
-        files: [],
-        expanded: new Set(JSON.parse(sessionStorageGet("sqlExpanded") ?? "[]")),
-        selectedFolderId: null,
         fileId: null,
         dirty: false,
         result: null,
@@ -60,126 +57,12 @@ export function initSqlEditor(root) {
 
     const confirmDiscard = () => !state.dirty || confirm("Perubahan pada file ini belum disimpan. Buang perubahan?");
 
-    // ---------- pohon folder ----------
-
-    const childrenOf = (parentId) => state.folders.filter((f) => f.parent_id === parentId);
-    const filesIn = (folderId) => state.files.filter((f) => f.folder_id === folderId);
-
-    const folderPath = (folder) => {
-        const names = [];
-        for (let current = folder; current; current = state.folders.find((f) => f.id === current.parent_id)) {
-            names.unshift(current.name);
-        }
-        return names.join(" / ");
-    };
-
-    const renderFolderOptions = (selected) => {
-        const options = [make("option", { value: "", textContent: "(Tanpa folder)" })];
-        const walk = (parentId, depth) =>
-            childrenOf(parentId).forEach((folder) => {
-                options.push(make("option", { value: folder.id, textContent: `${"\u00A0\u00A0".repeat(depth)}📁 ${folder.name}`, selected: folder.id === selected }));
-                walk(folder.id, depth + 1);
-            });
-        walk(null, 0);
-        folderSelect.replaceChildren(...options);
-        folderSelect.value = selected ?? "";
-    };
-
-    const fileNode = (file) => {
-        const button = make("button", {
-            type: "button",
-            className: "sql-node sql-file" + (file.id === state.fileId ? " active" : ""),
-            textContent: `📄 ${file.name}`,
-            title: file.name,
-        });
-        button.setAttribute("role", "treeitem");
-        button.addEventListener("click", () => openFile(file.id));
-        return button;
-    };
-
-    const folderNode = (folder) => {
-        const open = state.expanded.has(folder.id);
-        const button = make("button", {
-            type: "button",
-            className: "sql-node sql-folder" + (folder.id === state.selectedFolderId ? " active" : ""),
-            textContent: `${open ? "▾" : "▸"} 📁 ${folder.name}`,
-            title: folder.name,
-        });
-        button.setAttribute("role", "treeitem");
-        button.setAttribute("aria-expanded", String(open));
-        button.addEventListener("click", () => {
-            open ? state.expanded.delete(folder.id) : state.expanded.add(folder.id);
-            sessionStorageSet("sqlExpanded", JSON.stringify([...state.expanded]));
-            state.selectedFolderId = folder.id;
-            renderTree();
-        });
-
-        const children = make("div", { className: "sql-children", hidden: !open });
-        children.setAttribute("role", "group");
-        childrenOf(folder.id).forEach((child) => children.append(folderNode(child)));
-        filesIn(folder.id).forEach((file) => children.append(fileNode(file)));
-
-        return make("div", { className: "sql-branch" }, [button, children]);
-    };
-
-    const renderTree = () => {
-        const tree = el("sqlTree");
-        const rootButton = make("button", {
-            type: "button",
-            className: "sql-node sql-root" + (state.selectedFolderId === null ? " active" : ""),
-            textContent: "🗂 Semua file",
-        });
-        rootButton.addEventListener("click", () => {
-            state.selectedFolderId = null;
-            renderTree();
-        });
-
-        tree.replaceChildren(rootButton, ...childrenOf(null).map(folderNode), ...filesIn(null).map(fileNode));
-
-        if (state.folders.length === 0 && state.files.length === 0) {
-            tree.append(make("p", { className: "qb-hint", textContent: "Belum ada file. Klik + File untuk mulai." }));
-        }
-
-        const selected = state.folders.find((f) => f.id === state.selectedFolderId);
-        el("sqlFolderActions").hidden = !selected;
-        el("sqlFolderLabel").textContent = selected ? `📁 ${folderPath(selected)}` : "";
-    };
-
-    const loadTree = async () => {
-        const response = await request(root.dataset.treeUrl);
-        if (!response.ok) {
-            showError(errorMessages(response));
-            return;
-        }
-        state.folders = response.data.data.folders;
-        state.files = response.data.data.files;
-        renderTree();
-        renderFolderOptions(folderSelect.value ? Number(folderSelect.value) : state.selectedFolderId);
-    };
-
     // ---------- file ----------
 
     const setUrl = (fileId) => {
         const next = new URL(window.location.href);
         fileId ? next.searchParams.set("file", fileId) : next.searchParams.delete("file");
         history.replaceState(null, "", next);
-    };
-
-    const newFile = () => {
-        if (!confirmDiscard()) {
-            return;
-        }
-        state.fileId = null;
-        nameInput.value = "";
-        editor.value = "";
-        renderFolderOptions(state.selectedFolderId);
-        el("sqlDeleteFile").hidden = true;
-        setDirty(false);
-        showError([]);
-        showSaved("");
-        setUrl(null);
-        renderTree();
-        nameInput.focus();
     };
 
     const openFile = async (id) => {
@@ -193,16 +76,14 @@ export function initSqlEditor(root) {
         }
         const file = response.data.data;
         state.fileId = file.id;
-        state.selectedFolderId = file.folder_id;
         nameInput.value = file.name;
         editor.value = file.sql;
-        renderFolderOptions(file.folder_id);
+        folderSelect.value = file.folder_id ?? "";
         el("sqlDeleteFile").hidden = false;
         setDirty(false);
         showError([]);
         showSaved("");
         setUrl(file.id);
-        renderTree();
         run();
     };
 
@@ -223,71 +104,23 @@ export function initSqlEditor(root) {
 
         const file = response.data.data;
         state.fileId = file.id;
-        if (file.folder_id) {
-            state.expanded.add(file.folder_id);
-        }
         el("sqlDeleteFile").hidden = false;
         setDirty(false);
         setUrl(file.id);
-        showSaved(`"${file.name}" tersimpan.`);
-        await loadTree();
+        showSaved(`"${file.name}" tersimpan di Analitik.`);
     };
 
     const deleteFile = async () => {
         if (!state.fileId || !confirm(`Hapus file "${nameInput.value}"?`)) {
             return;
         }
-        const response = await request(url("fileUrl", state.fileId), "DELETE");
+        const response = await request(url("deleteUrl", state.fileId), "DELETE");
         if (!response.ok) {
             showError(errorMessages(response));
             return;
         }
         setDirty(false);
-        newFile();
-        await loadTree();
-    };
-
-    // ---------- folder ----------
-
-    const createFolder = async () => {
-        const name = prompt("Nama folder baru:");
-        if (!name) {
-            return;
-        }
-        const response = await request(root.dataset.foldersUrl, "POST", { name: name.trim(), parent_id: state.selectedFolderId });
-        if (!response.ok) {
-            showError(errorMessages(response));
-            return;
-        }
-        if (state.selectedFolderId) {
-            state.expanded.add(state.selectedFolderId);
-        }
-        state.selectedFolderId = response.data.data.id;
-        await loadTree();
-    };
-
-    const renameFolder = async () => {
-        const folder = state.folders.find((f) => f.id === state.selectedFolderId);
-        const name = folder && prompt("Nama baru folder:", folder.name);
-        if (!name) {
-            return;
-        }
-        const response = await request(url("folderUrl", folder.id), "PUT", { name: name.trim(), parent_id: folder.parent_id });
-        response.ok ? await loadTree() : showError(errorMessages(response));
-    };
-
-    const deleteFolder = async () => {
-        const folder = state.folders.find((f) => f.id === state.selectedFolderId);
-        if (!folder || !confirm(`Hapus folder "${folder.name}"?`)) {
-            return;
-        }
-        const response = await request(url("folderUrl", folder.id), "DELETE");
-        if (!response.ok) {
-            showError(errorMessages(response));
-            return;
-        }
-        state.selectedFolderId = folder.parent_id;
-        await loadTree();
+        window.location.href = root.dataset.analyticsUrl;
     };
 
     // ---------- jalankan & hasil ----------
@@ -391,10 +224,6 @@ export function initSqlEditor(root) {
     el("sqlSave").addEventListener("click", save);
     el("sqlExport").addEventListener("click", exportCsv);
     el("sqlDeleteFile").addEventListener("click", deleteFile);
-    el("sqlNewFile").addEventListener("click", newFile);
-    el("sqlNewFolder").addEventListener("click", createFolder);
-    el("sqlRenameFolder").addEventListener("click", renameFolder);
-    el("sqlDeleteFolder").addEventListener("click", deleteFolder);
     el("sqlPrev").addEventListener("click", () => {
         state.page--;
         renderPage();
@@ -410,27 +239,8 @@ export function initSqlEditor(root) {
         }
     });
 
-    loadTree().then(() => {
-        const fileId = new URLSearchParams(window.location.search).get("file");
-        if (fileId) {
-            openFile(Number(fileId));
-        }
-    });
-}
-
-/** Penyimpanan per tab untuk folder yang terbuka; aman bila storage tidak tersedia. */
-function sessionStorageGet(key) {
-    try {
-        return window.sessionStorage.getItem(key);
-    } catch {
-        return null;
-    }
-}
-
-function sessionStorageSet(key, value) {
-    try {
-        window.sessionStorage.setItem(key, value);
-    } catch {
-        // abaikan
+    const fileId = new URLSearchParams(window.location.search).get("file");
+    if (fileId) {
+        openFile(Number(fileId));
     }
 }
