@@ -11,7 +11,7 @@ use App\Models\SavedQuery;
 use App\Models\Widget;
 use App\Services\Dashboard\GlobalFilters;
 use App\Services\Dashboard\WidgetOptions;
-use App\Services\Query\QueryEngine;
+use App\Services\Query\SavedQueryRunner;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -21,7 +21,7 @@ class WidgetController extends Controller
 {
     private const MAX_FILTER_OPTIONS = 500;
 
-    public function __construct(private QueryEngine $engine) {}
+    public function __construct(private SavedQueryRunner $runner) {}
 
     public function store(WidgetRequest $request, Dashboard $dashboard): JsonResponse
     {
@@ -54,12 +54,13 @@ class WidgetController extends Controller
         $widget->load('dashboard', 'savedQuery.dataset');
         $savedQuery = $widget->savedQuery;
 
-        $global = GlobalFilters::forDataset($widget->dashboard, $savedQuery->dataset, (array) $request->query('filters', []));
+        $global = GlobalFilters::forColumns(
+            $widget->dashboard,
+            $this->runner->filterableColumns($savedQuery),
+            (array) $request->query('filters', []),
+        );
 
-        $config = $savedQuery->config;
-        $config['filters'] = [...($config['filters'] ?? []), ...$global['filters']];
-
-        $result = $this->engine->cachedRun($savedQuery->dataset, $config);
+        $result = $this->runner->run($savedQuery, $global['filters']);
 
         return response()->json([
             'data' => ['columns' => $result['columns'], 'rows' => $result['rows']],
@@ -77,7 +78,7 @@ class WidgetController extends Controller
         abort_unless($definition !== null && $definition['type'] === 'select', 404);
 
         $values = Dataset::query()
-            ->whereIn('id', SavedQuery::whereIn('id', $dashboard->widgets()->select('saved_query_id'))->select('dataset_id'))
+            ->whereIn('id', SavedQuery::whereIn('id', $dashboard->widgets()->select('saved_query_id'))->whereNotNull('dataset_id')->select('dataset_id'))
             ->get()
             ->filter(fn (Dataset $dataset) => $dataset->isImported() && $dataset->columns()->where('name', $key)->exists())
             ->flatMap(fn (Dataset $dataset) => DB::table($dataset->table_name)
@@ -101,7 +102,7 @@ class WidgetController extends Controller
     private function attributes(WidgetRequest $request): array
     {
         $savedQuery = SavedQuery::with('dataset')->findOrFail($request->integer('saved_query_id'));
-        $columns = $this->engine->outputColumnNames($savedQuery->dataset, $savedQuery->config);
+        $columns = $this->runner->outputColumns($savedQuery);
 
         return [
             ...$request->safe()->only('saved_query_id', 'title', 'chart_type', 'sort_order', 'width'),

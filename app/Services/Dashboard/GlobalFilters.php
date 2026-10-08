@@ -3,24 +3,23 @@
 namespace App\Services\Dashboard;
 
 use App\Models\Dashboard;
-use App\Models\Dataset;
 use Illuminate\Support\Facades\Validator;
 
 class GlobalFilters
 {
     /**
-     * Ubah nilai filter dashboard dari request menjadi filter query engine
-     * untuk satu dataset. Filter hanya berlaku bila dataset punya kolom
-     * bernama sama dengan `key`; filter lain diabaikan untuk widget ini.
+     * Ubah nilai filter dashboard dari request menjadi filter query untuk satu
+     * widget. Filter hanya berlaku bila widget punya kolom bernama sama dengan
+     * `key`; filter lain diabaikan untuk widget ini.
      *
+     * @param  list<string>  $columns  kolom yang bisa difilter pada widget
      * @param  array<string, mixed>  $input  isi parameter `filters` dari request
      * @return array{filters: list<array{column: string, op: string, value: mixed}>, applied: list<string>, ignored: list<string>}
      */
-    public static function forDataset(Dashboard $dashboard, Dataset $dataset, array $input): array
+    public static function forColumns(Dashboard $dashboard, array $columns, array $input): array
     {
         $definitions = collect($dashboard->filters ?? [])->keyBy('key');
         $values = self::validate($definitions->all(), $input);
-        $columns = $dataset->columns()->pluck('name')->all();
 
         $result = ['filters' => [], 'applied' => [], 'ignored' => []];
 

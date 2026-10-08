@@ -1,31 +1,31 @@
 @extends('layouts.app')
 
-@section('title', 'Query')
+@section('title', 'Filter Data')
 
-@section('page-title', 'Query')
+@section('page-title', 'Filter Data')
 
 @section('content')
 
     <div class="page-header data-header">
 
         <div>
-            <h1>Saved Query</h1>
+            <h1>Filter Data</h1>
 
             <p>
-                Query tersimpan yang bisa dipakai sebagai sumber widget dashboard.
+                Ringkasan data yang disusun tanpa SQL dan bisa dipakai sebagai sumber widget dashboard.
             </p>
         </div>
 
         <a href="{{ route('queries.builder') }}" class="upload-button button-link">
-            + Query Baru
+            + Filter Baru
         </a>
 
     </div>
 
     @if ($queries->isEmpty())
         <div class="empty-state">
-            <h3>Belum ada query</h3>
-            <p>Klik "+ Query Baru" untuk menyusun query pertama tanpa menulis SQL.</p>
+            <h3>Belum ada filter data</h3>
+            <p>Klik "+ Filter Baru" untuk menyusun ringkasan pertama tanpa menulis SQL.</p>
         </div>
     @else
         <div class="table-scroll">

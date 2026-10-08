@@ -8,6 +8,7 @@ use App\Http\Resources\SavedQueryResource;
 use App\Models\Dataset;
 use App\Models\SavedQuery;
 use App\Services\Query\QueryEngine;
+use App\Services\Query\SavedQueryRunner;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -83,9 +84,9 @@ class SavedQueryController extends Controller
         return $this->result($this->config(fn () => $this->engine->cachedRun($dataset, $validated['config'])));
     }
 
-    public function runSaved(SavedQuery $savedQuery): JsonResponse
+    public function runSaved(SavedQuery $savedQuery, SavedQueryRunner $runner): JsonResponse
     {
-        return $this->result($this->engine->cachedRun($savedQuery->dataset, $savedQuery->config));
+        return $this->result($runner->run($savedQuery->loadMissing('dataset')));
     }
 
     /**

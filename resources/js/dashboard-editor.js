@@ -410,7 +410,7 @@ export function initDashboardEditor(root, view) {
         queries = response.ok ? response.data.data : [];
         queryField.replaceChildren(
             make("option", { value: "", textContent: "— pilih saved query —" }),
-            ...queries.map((q) => make("option", { value: q.id, textContent: `${q.name} (${q.dataset_name})` })),
+            ...queries.map((q) => make("option", { value: q.id, textContent: `${q.name} (${q.type === "sql" ? "SQL" : q.dataset_name})` })),
         );
     });
 

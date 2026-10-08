@@ -37,7 +37,11 @@
                     </a>
 
                     <a href="{{ route('queries.index') }}">
-                        Query
+                        Filter Data
+                    </a>
+
+                    <a href="{{ route('sql.index') }}">
+                        SQL
                     </a>
                 @endcan
 

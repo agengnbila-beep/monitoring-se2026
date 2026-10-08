@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Dataset;
+use App\Models\QueryFolder;
 use App\Models\SavedQuery;
 use App\Models\User;
 use App\Models\Widget;
@@ -126,6 +127,7 @@ class SecurityTest extends TestCase
             'dashboard' => $widget->dashboard_id,
             'widget' => $widget->id,
             'key' => 'kecamatan',
+            'folder' => QueryFolder::factory()->create()->id,
         ];
     }
 

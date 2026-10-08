@@ -1,15 +1,15 @@
 @extends('layouts.app')
 
-@section('title', 'Query Builder')
+@section('title', 'Filter Data')
 
-@section('page-title', 'Query')
+@section('page-title', 'Filter Data')
 
 @section('content')
 
     <div class="page-header">
-        <a href="{{ route('queries.index') }}" class="back-link">← Semua query</a>
+        <a href="{{ route('queries.index') }}" class="back-link">← Semua filter data</a>
 
-        <h1>{{ $savedQuery ? 'Edit: '.$savedQuery['name'] : 'Query Baru' }}</h1>
+        <h1>{{ $savedQuery ? 'Edit: '.$savedQuery['name'] : 'Filter Data Baru' }}</h1>
 
         <p>Pilih dataset, kolom, dan ringkasan yang ingin dihitung, lalu klik Jalankan.</p>
     </div>
@@ -94,10 +94,10 @@
                 </section>
 
                 <section class="qb-panel">
-                    <h2 class="section-title">Simpan query</h2>
+                    <h2 class="section-title">Simpan filter data</h2>
 
                     <div class="qb-save">
-                        <input type="text" id="qbName" class="qb-input" placeholder="Nama query, mis. Jumlah KRT per kecamatan" maxlength="255" aria-label="Nama query">
+                        <input type="text" id="qbName" class="qb-input" placeholder="Nama, mis. Jumlah KRT per kecamatan" maxlength="255" aria-label="Nama filter data">
                         <input type="text" id="qbDescription" class="qb-input" placeholder="Deskripsi (opsional)" maxlength="1000" aria-label="Deskripsi">
                         <button type="button" id="qbSave">Simpan</button>
                     </div>

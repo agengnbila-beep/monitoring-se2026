@@ -419,7 +419,7 @@ export function initQueryBuilder(root) {
 
         state.savedQueryId = response.data.data.id;
         history.replaceState(null, "", `${root.dataset.builderUrl}?query=${state.savedQueryId}`);
-        el("qbSaved").textContent = `Query "${response.data.data.name}" tersimpan.`;
+        el("qbSaved").textContent = `"${response.data.data.name}" tersimpan.`;
         el("qbSaved").hidden = false;
     };
 

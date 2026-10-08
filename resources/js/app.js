@@ -194,4 +194,14 @@ document.addEventListener("DOMContentLoaded", function () {
     if (dashCreate) {
         import("./dashboard-editor").then(({ initDashboardCreate }) => initDashboardCreate(dashCreate));
     }
+
+    // =========================
+    // MODE SQL
+    // =========================
+
+    const sqlApp = document.getElementById("sqlApp");
+
+    if (sqlApp) {
+        import("./sql-editor").then(({ initSqlEditor }) => initSqlEditor(sqlApp));
+    }
 });

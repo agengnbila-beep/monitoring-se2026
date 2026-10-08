@@ -234,3 +234,21 @@ Key yang tidak didefinisikan dashboard diabaikan. Respons menambah
 
 Pilihan nilai filter select: `GET /api/dashboards/{id}/filters/{key}/options`
 → `{ "data": ["Bangli", "Susut"] }` (nilai unik dari dataset widget, maks 500).
+
+## 8. Mode SQL (admin)
+
+Saved query bertipe `sql` berisi SQL bebas yang dijalankan lewat koneksi SQLite
+**read-only** dengan *authorizer*: hanya `SELECT`/`WITH` yang membaca tabel `ds_{id}`.
+Membaca tabel lain (users, sessions, sqlite_master), menulis, PRAGMA, ATTACH, dan
+`WITH RECURSIVE` ditolak oleh SQLite. Hanya satu perintah; hasil maks 1.000 baris (default).
+
+| Method | URL | Keterangan |
+|---|---|---|
+| GET | `/api/sql/tree` | `{ "data": { "folders": [{id, name, parent_id}], "files": [{id, name, folder_id, updated_at}] } }` |
+| POST | `/api/sql/run` | Body `{ "sql", "limit"? }` → format sama dengan bagian 5 |
+| POST/PUT/DELETE | `/api/sql/folders[/{id}]` | Body `{ "name", "parent_id"? }`; hapus hanya bila kosong (409) |
+| POST/GET/PUT/DELETE | `/api/sql/files[/{id}]` | Body `{ "name", "description"?, "folder_id"?, "sql" }`; SQL dicoba dijalankan sebelum disimpan (422 bila gagal); hapus 409 bila dipakai widget |
+
+File SQL bisa dipakai sebagai widget dashboard. Filter global diterapkan dengan
+membungkus SQL: `SELECT * FROM (<sql>) AS hasil WHERE "key" = ?` bila hasil query
+punya kolom `key`; tipe kolom hasil dideteksi dari nilai yang dikembalikan.

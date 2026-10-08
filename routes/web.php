@@ -3,12 +3,14 @@
 use App\Http\Controllers\Api\DashboardController as ApiDashboardController;
 use App\Http\Controllers\Api\DatasetController as ApiDatasetController;
 use App\Http\Controllers\Api\SavedQueryController;
+use App\Http\Controllers\Api\SqlController;
 use App\Http\Controllers\Api\WidgetController;
 use App\Http\Controllers\Auth\LoginController as AuthLoginController;
 use App\Http\Controllers\DashboardPageController;
 use App\Http\Controllers\DatasetColumnController;
 use App\Http\Controllers\DatasetController;
 use App\Http\Controllers\QueryPageController;
+use App\Http\Controllers\SqlPageController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
@@ -46,6 +48,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/queries/builder', [QueryPageController::class, 'builder'])->name('queries.builder');
         Route::delete('/queries/{savedQuery}', [QueryPageController::class, 'destroy'])->name('queries.destroy');
 
+        Route::get('/sql', [SqlPageController::class, 'index'])->name('sql.index');
+
         Route::prefix('api')->name('api.')->group(function () {
             Route::get('/datasets', [ApiDatasetController::class, 'index'])->name('datasets.index');
             Route::get('/datasets/{dataset}/profile', [ApiDatasetController::class, 'profile'])->name('datasets.profile');
@@ -56,6 +60,18 @@ Route::middleware('auth')->group(function () {
                 Route::get('/queries/{savedQuery}/run', [SavedQueryController::class, 'runSaved'])->name('queries.run-saved');
             });
             Route::apiResource('queries', SavedQueryController::class)->parameters(['queries' => 'savedQuery']);
+
+            Route::prefix('sql')->name('sql.')->group(function () {
+                Route::get('/tree', [SqlController::class, 'tree'])->name('tree');
+                Route::post('/run', [SqlController::class, 'run'])->middleware('throttle:queries')->name('run');
+                Route::post('/folders', [SqlController::class, 'storeFolder'])->name('folders.store');
+                Route::put('/folders/{folder}', [SqlController::class, 'updateFolder'])->name('folders.update');
+                Route::delete('/folders/{folder}', [SqlController::class, 'destroyFolder'])->name('folders.destroy');
+                Route::post('/files', [SqlController::class, 'storeFile'])->name('files.store');
+                Route::get('/files/{savedQuery}', [SqlController::class, 'showFile'])->name('files.show');
+                Route::put('/files/{savedQuery}', [SqlController::class, 'updateFile'])->name('files.update');
+                Route::delete('/files/{savedQuery}', [SqlController::class, 'destroyFile'])->name('files.destroy');
+            });
 
             Route::apiResource('dashboards', ApiDashboardController::class)->only(['store', 'update', 'destroy']);
             Route::post('/dashboards/{dashboard}/widgets', [WidgetController::class, 'store'])->name('widgets.store');

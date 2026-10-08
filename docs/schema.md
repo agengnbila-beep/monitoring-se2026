@@ -42,11 +42,25 @@
 
 Unique: (`dataset_id`, `name`)
 
+## query_folders (folder file SQL)
+| Kolom | Tipe | Keterangan |
+|---|---|---|
+| id | PK | |
+| name | string | |
+| parent_id | FK query_folders, null, cascade | Folder bersarang |
+| created_by | FK users, null, nullOnDelete | |
+| timestamps | | |
+
+Folder hanya bisa dihapus bila kosong (409).
+
 ## saved_queries
 | Kolom | Tipe | Keterangan |
 |---|---|---|
 | id | PK | |
-| dataset_id | FK datasets, restrict | |
+| type | string, default `builder` | `builder` (Filter Data) / `sql` (mode SQL) |
+| dataset_id | FK datasets, null, restrict | Wajib untuk `builder`; null untuk `sql` |
+| folder_id | FK query_folders, null, nullOnDelete | Khusus `sql` |
+| sql | text, null | Khusus `sql` |
 | name | string | |
 | description | text, null | |
 | config | json | Konfigurasi builder (lihat api-contract.md) |

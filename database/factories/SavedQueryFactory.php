@@ -32,4 +32,17 @@ class SavedQueryFactory extends Factory
         ];
 
     }
+
+    /**
+     * File SQL (tanpa dataset tetap) yang membaca tabel data secara langsung.
+     */
+    public function sql(string $sql = 'SELECT 1 AS satu'): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'type' => 'sql',
+            'dataset_id' => null,
+            'sql' => $sql,
+            'config' => [],
+        ]);
+    }
 }

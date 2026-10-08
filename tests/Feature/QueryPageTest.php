@@ -32,6 +32,40 @@ class QueryPageTest extends TestCase
             ->assertSeeInOrder(['KRT per kecamatan', $savedQuery->dataset->name]);
     }
 
+    public function test_list_does_not_include_sql_files(): void
+    {
+        SavedQuery::factory()->create(['name' => 'Ringkasan builder']);
+        SavedQuery::factory()->sql()->create(['name' => 'File SQL saya']);
+
+        $this->actingAs(User::factory()->admin()->create())
+            ->get(route('queries.index'))
+            ->assertOk()
+            ->assertSee('Ringkasan builder')
+            ->assertDontSee('File SQL saya');
+    }
+
+    public function test_opening_sql_file_in_builder_redirects_to_sql_page(): void
+    {
+        $file = SavedQuery::factory()->sql()->create();
+
+        $this->actingAs(User::factory()->admin()->create())
+            ->get(route('queries.builder', ['query' => $file->id]))
+            ->assertRedirect(route('sql.index', ['file' => $file->id]));
+    }
+
+    public function test_sql_page_lists_imported_dataset_tables_for_reference(): void
+    {
+        $dataset = $this->importedDataset(['kecamatan' => 'text'], [], ['name' => 'Pendataan']);
+        Dataset::factory()->create(['name' => 'Belum Siap', 'status' => 'processing']);
+
+        $this->actingAs(User::factory()->admin()->create())
+            ->get(route('sql.index'))
+            ->assertOk()
+            ->assertSee('data-insert="'.$dataset->table_name.'"', false)
+            ->assertSee('data-insert="kecamatan"', false)
+            ->assertDontSee('Belum Siap');
+    }
+
     public function test_builder_offers_only_imported_datasets(): void
     {
         $imported = $this->importedDataset(['kecamatan' => 'text'], [], ['name' => 'Siap Dipakai']);

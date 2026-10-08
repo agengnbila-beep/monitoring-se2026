@@ -11,7 +11,14 @@ class SavedQuery extends Model
 {
     use HasFactory;
 
+    public const TYPE_BUILDER = 'builder';
+
+    public const TYPE_SQL = 'sql';
+
     protected $fillable = [
+        'type',
+        'sql',
+        'folder_id',
         'dataset_id',
         'name',
         'description',
@@ -24,6 +31,23 @@ class SavedQuery extends Model
         return [
             'config' => 'array',
         ];
+    }
+
+    /**
+     * Default yang sama dengan kolom `type` di database.
+     */
+    protected $attributes = [
+        'type' => self::TYPE_BUILDER,
+    ];
+
+    public function isSql(): bool
+    {
+        return $this->type === self::TYPE_SQL;
+    }
+
+    public function folder(): BelongsTo
+    {
+        return $this->belongsTo(QueryFolder::class, 'folder_id');
     }
 
     public function dataset(): BelongsTo
