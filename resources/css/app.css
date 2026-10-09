@@ -75,10 +75,47 @@ body {
     padding: 24px 16px;
 }
 
-.logo {
-    font-size: 22px;
-    font-weight: 700;
-    padding: 0 12px 30px;
+.sidebar a.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 8px 28px;
+    color: var(--text);
+    text-decoration: none;
+}
+
+.sidebar a.brand:hover {
+    background: transparent;
+}
+
+.brand-mark {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--accent);
+    color: white;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+}
+
+.brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+    min-width: 0;
+}
+
+.brand-text strong {
+    font-size: 15px;
+}
+
+.brand-text small {
+    font-size: 12px;
+    color: var(--text-muted);
 }
 
 .sidebar nav {
@@ -224,9 +261,12 @@ button {
         overflow-x: auto;
     }
 
-    .logo {
-        font-size: 18px;
+    .sidebar a.brand {
         padding: 0;
+    }
+
+    .brand-text small {
+        display: none;
     }
 
     .sidebar nav {
@@ -1566,4 +1606,80 @@ form + .section-title,
     .qb-viz {
         grid-template-columns: 1fr;
     }
+}
+
+/* ===== Dialog aplikasi (pengganti prompt/confirm browser) ===== */
+.dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.6);
+    animation: dialogFade 0.12s ease-out;
+}
+
+.dialog {
+    width: 100%;
+    max-width: 420px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    padding: 22px 24px 20px;
+    animation: dialogIn 0.14s ease-out;
+}
+
+.dialog-title {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.dialog-message {
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.dialog-label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.dialog-input {
+    width: 100%;
+    padding: 10px 12px;
+}
+
+.dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 22px;
+}
+
+.danger-button {
+    background: #c24141;
+    color: white;
+}
+
+.danger-button:hover {
+    background: #d14f4f;
+}
+
+.auth-mark {
+    width: 44px;
+    height: 44px;
+    margin-bottom: 14px;
+}
+
+@keyframes dialogFade {
+    from { opacity: 0; }
+}
+
+@keyframes dialogIn {
+    from { opacity: 0; transform: translateY(6px) scale(0.98); }
 }

@@ -82,7 +82,8 @@
     @endif
 
     <form method="POST" action="{{ route('data.destroy', $dataset) }}" class="preview-cancel"
-        onsubmit="return confirm('Batalkan upload dan hapus file ini?')">
+        data-confirm-title="Batalkan upload" data-confirm-label="Hapus file"
+        data-confirm="File yang diupload akan dihapus dan tidak diimpor.">
         @csrf
         @method('DELETE')
         <button type="submit" class="cancel-button">Batal &amp; Hapus</button>

@@ -23,7 +23,8 @@
         </div>
 
         <form method="POST" action="{{ route('data.destroy', $dataset) }}"
-            onsubmit="return confirm(@js('Hapus dataset '.$dataset->name.' beserta seluruh datanya?'))">
+            data-confirm-title="Hapus dataset" data-confirm-label="Hapus"
+            data-confirm="Dataset &quot;{{ $dataset->name }}&quot; beserta seluruh datanya akan dihapus.">
             @csrf
             @method('DELETE')
             <button type="submit" class="cancel-button">Hapus Dataset</button>

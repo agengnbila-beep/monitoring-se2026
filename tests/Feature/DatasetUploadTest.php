@@ -190,14 +190,15 @@ class DatasetUploadTest extends TestCase
         $this->assertModelExists($dataset);
     }
 
-    public function test_dataset_name_cannot_break_out_of_delete_confirmation_script(): void
+    public function test_dataset_name_is_escaped_in_delete_confirmation(): void
     {
-        Dataset::factory()->create(['name' => "x'); alert(1); ('"]);
+        Dataset::factory()->create(['name' => 'x" onmouseover="alert(1)']);
 
         $this->actingAs($this->admin)
             ->get(route('data'))
             ->assertOk()
-            ->assertSee('confirm(\'Hapus dataset x\\u0027); alert(1); (\\u0027?\')', false);
+            ->assertSee('data-confirm="Dataset &quot;x&quot; onmouseover=&quot;alert(1)&quot; beserta tabel datanya akan dihapus."', false)
+            ->assertDontSee('onsubmit=', false);
     }
 
     public function test_admin_can_delete_uploaded_dataset_and_its_file(): void

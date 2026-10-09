@@ -92,7 +92,8 @@
 
                     @unless ($dataset->status === 'processing')
                         <form method="POST" action="{{ route('data.destroy', $dataset) }}"
-                            onsubmit="return confirm(@js('Hapus dataset '.$dataset->name.'?'))">
+                            data-confirm-title="Hapus dataset" data-confirm-label="Hapus"
+                            data-confirm="Dataset &quot;{{ $dataset->name }}&quot; beserta tabel datanya akan dihapus.">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="cancel-button">Hapus</button>

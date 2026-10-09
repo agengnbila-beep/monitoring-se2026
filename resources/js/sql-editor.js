@@ -4,6 +4,7 @@
 // Panel kiri berisi tabel dataset; file dan folder dikelola di laman Analitik.
 // =========================
 
+import { confirmDialog } from "./dialog";
 import { errorMessages, request } from "./http";
 
 const PAGE_SIZE = 25;
@@ -55,7 +56,9 @@ export function initSqlEditor(root) {
         el("sqlDirty").hidden = !dirty;
     };
 
-    const confirmDiscard = () => !state.dirty || confirm("Perubahan pada file ini belum disimpan. Buang perubahan?");
+    const confirmDiscard = async () =>
+        !state.dirty ||
+        (await confirmDialog({ title: "Perubahan belum disimpan", message: "Perubahan pada file ini belum disimpan. Buang perubahan?", confirmLabel: "Buang", danger: true }));
 
     // ---------- file ----------
 
@@ -66,7 +69,7 @@ export function initSqlEditor(root) {
     };
 
     const openFile = async (id) => {
-        if (id !== state.fileId && !confirmDiscard()) {
+        if (id !== state.fileId && !(await confirmDiscard())) {
             return;
         }
         const response = await request(url("fileUrl", id));
@@ -111,7 +114,7 @@ export function initSqlEditor(root) {
     };
 
     const deleteFile = async () => {
-        if (!state.fileId || !confirm(`Hapus file "${nameInput.value}"?`)) {
+        if (!state.fileId || !(await confirmDialog({ title: "Hapus file", message: `File "${nameInput.value}" akan dihapus permanen.`, confirmLabel: "Hapus", danger: true }))) {
             return;
         }
         const response = await request(url("deleteUrl", state.fileId), "DELETE");

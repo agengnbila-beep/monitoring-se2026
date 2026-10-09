@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Masuk · Monitoring SE2026</title>
+    <title>Masuk · {{ config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
@@ -13,8 +13,9 @@
     <form method="POST" action="{{ route('login') }}" class="auth-card">
         @csrf
 
-        <h1>Monitoring SE2026</h1>
-        <p>Masuk untuk melanjutkan</p>
+        <span class="brand-mark auth-mark" aria-hidden="true">BPS</span>
+        <h1>Monitoring Sensus</h1>
+        <p>BPS Kabupaten Batanghari · masuk untuk melanjutkan</p>
 
         @error('email')
             <div class="auth-error">{{ $message }}</div>

@@ -9,7 +9,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>
-        @yield('title', 'Monitoring SE2026')
+        @hasSection('title')@yield('title') · @endif{{ config('app.name') }}
     </title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -21,9 +21,13 @@
 
         <aside class="sidebar">
 
-            <div class="logo">
-                SE2026
-            </div>
+            <a href="{{ route('dashboard') }}" class="brand" title="{{ config('app.name') }}">
+                <span class="brand-mark" aria-hidden="true">BPS</span>
+                <span class="brand-text">
+                    <strong>Monitoring Sensus</strong>
+                    <small>BPS Kabupaten Batanghari</small>
+                </span>
+            </a>
 
             <nav>
 

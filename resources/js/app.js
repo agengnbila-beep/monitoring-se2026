@@ -1,6 +1,9 @@
+import { enableConfirmForms } from "./dialog";
 import { initQueryBuilder } from "./query-builder";
 
 document.addEventListener("DOMContentLoaded", function () {
+    enableConfirmForms();
+
     // =========================
     // ELEMENT
     // =========================

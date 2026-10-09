@@ -4,6 +4,7 @@
 // Setiap perubahan disimpan lewat API lalu laman dimuat ulang dalam mode edit.
 // =========================
 
+import { confirmDialog } from "./dialog";
 import { errorMessages, request } from "./http";
 import { CHART_TYPES, field, make, readOptionsForm, renderOptionsForm, selectOf } from "./widget-options";
 
@@ -114,7 +115,7 @@ export function initDashboardEditor(root, view) {
 
     const deleteDashboard = make("button", { type: "button", className: "cancel-button", textContent: "Hapus dashboard" });
     deleteDashboard.addEventListener("click", async () => {
-        if (!confirm(`Hapus dashboard "${dashboard.name}" beserta semua widget-nya?`)) {
+        if (!(await confirmDialog({ title: "Hapus dashboard", message: `Dashboard "${dashboard.name}" beserta semua widget-nya akan dihapus.`, confirmLabel: "Hapus", danger: true }))) {
             return;
         }
         const response = await request(root.dataset.dashboardUrl, "DELETE");
@@ -267,7 +268,7 @@ export function initDashboardEditor(root, view) {
 
             const remove = make("button", { type: "button", className: "cancel-button", textContent: "Hapus" });
             remove.addEventListener("click", async () => {
-                if (!confirm(`Hapus widget "${widget.title}"?`)) {
+                if (!(await confirmDialog({ title: "Hapus widget", message: `Widget "${widget.title}" akan dihapus dari dashboard.`, confirmLabel: "Hapus", danger: true }))) {
                     return;
                 }
                 const response = await request(widgetUrl(widget.id), "DELETE");
