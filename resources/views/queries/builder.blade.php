@@ -43,7 +43,13 @@
 
             <div id="qbEditor" hidden>
                 <section class="qb-panel">
-                    <h2 class="section-title">2. Kolom yang ditampilkan</h2>
+                    <div class="qb-section-head">
+                        <h2 class="section-title">2. Kolom yang ditampilkan</h2>
+                        <div class="qb-section-actions">
+                            <button type="button" class="outline-button" id="qbSelectAll">Pilih semua</button>
+                            <button type="button" class="outline-button" id="qbSelectNone">Kosongkan</button>
+                        </div>
+                    </div>
                     <p class="qb-hint">Bila ada ringkasan (langkah 3), kolom yang dicentang menjadi pengelompokan, misalnya "jumlah per kecamatan".</p>
                     <div id="qbColumns" class="qb-checks"></div>
                 </section>

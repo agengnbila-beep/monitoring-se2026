@@ -515,6 +515,13 @@ export function initQueryBuilder(root) {
         addOrder();
     });
     el("qbColumns").addEventListener("change", refreshOrderSuggestions);
+
+    const setAllColumns = (checked) => {
+        el("qbColumns").querySelectorAll("input[type=checkbox]").forEach((box) => (box.checked = checked));
+        refreshOrderSuggestions();
+    };
+    el("qbSelectAll").addEventListener("click", () => setAllColumns(true));
+    el("qbSelectNone").addEventListener("click", () => setAllColumns(false));
     el("qbAggregates").addEventListener("input", refreshOrderSuggestions);
     el("qbRun").addEventListener("click", run);
     el("qbExport").addEventListener("click", exportCsv);
