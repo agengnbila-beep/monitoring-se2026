@@ -79,6 +79,7 @@ Route::middleware('auth')->group(function () {
 
             Route::apiResource('dashboards', ApiDashboardController::class)->only(['store', 'update', 'destroy']);
             Route::post('/dashboards/{dashboard}/widgets', [WidgetController::class, 'store'])->name('widgets.store');
+            Route::put('/dashboards/{dashboard}/widgets/order', [WidgetController::class, 'reorder'])->name('widgets.reorder');
             Route::put('/widgets/{widget}', [WidgetController::class, 'update'])->name('widgets.update');
             Route::delete('/widgets/{widget}', [WidgetController::class, 'destroy'])->name('widgets.destroy');
         });

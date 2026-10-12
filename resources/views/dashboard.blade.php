@@ -65,6 +65,7 @@
                 data-query-run-url="{{ url('/api/queries/__ID__/run') }}"
                 data-dashboard-url="{{ route('api.dashboards.update', $dashboard) }}"
                 data-widget-store-url="{{ route('api.widgets.store', $dashboard) }}"
+                data-widget-order-url="{{ route('api.widgets.reorder', $dashboard) }}"
                 data-widget-url="{{ url('/api/widgets/__ID__') }}"
                 data-home-url="{{ route('dashboard') }}"
             @endcan

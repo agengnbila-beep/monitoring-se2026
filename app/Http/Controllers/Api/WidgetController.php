@@ -16,6 +16,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class WidgetController extends Controller
 {
@@ -35,6 +36,31 @@ class WidgetController extends Controller
         $widget->update($this->attributes($request));
 
         return new WidgetResource($widget);
+    }
+
+    /**
+     * Simpan urutan baru semua widget dashboard (hasil drag and drop).
+     * `order` wajib berisi tepat semua id widget milik dashboard ini.
+     */
+    public function reorder(Request $request, Dashboard $dashboard): JsonResponse
+    {
+        $ids = $dashboard->widgets()->pluck('id')->all();
+
+        $validated = $request->validate([
+            'order' => ['required', 'array', 'size:'.count($ids)],
+            'order.*' => ['integer', 'distinct', Rule::in($ids)],
+        ], [
+            'order.size' => 'Urutan harus memuat semua widget dashboard.',
+            'order.*.in' => 'Widget tidak ada di dashboard ini.',
+        ]);
+
+        DB::transaction(function () use ($validated) {
+            foreach ($validated['order'] as $position => $id) {
+                Widget::whereKey($id)->update(['sort_order' => $position + 1]);
+            }
+        });
+
+        return response()->json(['data' => ['order' => $validated['order']]]);
     }
 
     public function destroy(Widget $widget): Response

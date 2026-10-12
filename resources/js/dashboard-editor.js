@@ -221,41 +221,114 @@ export function initDashboardEditor(root, view) {
 
     // ---------- kontrol per kartu widget ----------
 
-    const swapOrder = async (widget, direction) => {
-        const ordered = [...dashboard.widgets];
-        const index = ordered.findIndex((w) => w.id === widget.id);
-        const other = ordered[index + direction];
-        if (!other) {
+    // ---------- urutan widget (drag and drop + tombol ↑↓) ----------
+
+    const grid = document.getElementById("dashboardGrid");
+
+    const domOrder = () => [...grid.querySelectorAll(".widget-card")].map((card) => Number(card.dataset.widgetId));
+
+    const refreshMoveButtons = () => {
+        const ids = domOrder();
+        ids.forEach((id, index) => {
+            const controls = cards.get(id).card.querySelector(".dash-card-controls");
+            controls.querySelector("[data-move=up]").disabled = index === 0;
+            controls.querySelector("[data-move=down]").disabled = index === ids.length - 1;
+        });
+    };
+
+    /** Simpan urutan sesuai susunan kartu di layar, tanpa memuat ulang laman. */
+    const saveOrder = async () => {
+        const order = domOrder();
+        const response = await request(root.dataset.widgetOrderUrl, "PUT", { order });
+        if (!response.ok) {
+            showError(response);
             return;
         }
-        // Urutan baru = posisi di daftar, agar sort_order yang sama pun tetap bisa ditukar.
-        ordered[index] = other;
-        ordered[index + direction] = widget;
-        const updates = ordered
-            .map((w, position) => ({ w, position: position + 1 }))
-            .filter(({ w, position }) => w.sort_order !== position);
-        for (const { w, position } of updates) {
-            const response = await request(widgetUrl(w.id), "PUT", widgetBody(w, { sort_order: position }));
-            if (!response.ok) {
-                showError(response);
-                return;
-            }
-        }
-        reloadInEditMode();
+        order.forEach((id, index) => {
+            const widget = dashboard.widgets.find((w) => w.id === id);
+            widget.sort_order = index + 1;
+        });
+        dashboard.widgets.sort((a, b) => a.sort_order - b.sort_order);
+        refreshMoveButtons();
     };
+
+    const moveBy = (widget, direction) => {
+        const card = cards.get(widget.id).card;
+        const sibling = direction < 0 ? card.previousElementSibling : card.nextElementSibling;
+        if (!sibling?.classList.contains("widget-card")) {
+            return;
+        }
+        direction < 0 ? sibling.before(card) : sibling.after(card);
+        card.querySelector(`[data-move=${direction < 0 ? "up" : "down"}]`).focus();
+        saveOrder();
+    };
+
+    let dragged = null;
+
+    const clearDropMarks = () => grid.querySelectorAll(".drop-before, .drop-after").forEach((c) => c.classList.remove("drop-before", "drop-after"));
+
+    /** Sisipkan sebelum/sesudah kartu tujuan, menurut posisi kursor terhadap tengah kartu. */
+    const dropSide = (card, event) => {
+        const rect = card.getBoundingClientRect();
+        const wide = rect.width > grid.getBoundingClientRect().width * 0.7;
+        return wide ? (event.clientY < rect.top + rect.height / 2 ? "before" : "after") : event.clientX < rect.left + rect.width / 2 ? "before" : "after";
+    };
+
+    grid.addEventListener("dragover", (event) => {
+        const target = event.target.closest?.(".widget-card");
+        if (!dragged || !target || target === dragged) {
+            return;
+        }
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "move";
+        clearDropMarks();
+        target.classList.add(dropSide(target, event) === "before" ? "drop-before" : "drop-after");
+    });
+
+    grid.addEventListener("drop", (event) => {
+        const target = event.target.closest?.(".widget-card");
+        if (!dragged || !target || target === dragged) {
+            return;
+        }
+        event.preventDefault();
+        dropSide(target, event) === "before" ? target.before(dragged) : target.after(dragged);
+        clearDropMarks();
+        saveOrder();
+    });
 
     const addCardControls = () => {
         dashboard.widgets.forEach((widget, index) => {
             const parts = cards.get(widget.id);
             const controls = make("div", { className: "dash-card-controls" });
 
+            const card = parts.card;
+
+            // Kartu hanya bisa diseret lewat pegangan, agar chart tetap bisa di-hover/diklik.
+            const handle = make("span", { className: "drag-handle", textContent: "⠿ Geser", title: "Seret untuk memindahkan widget" });
+            handle.setAttribute("aria-hidden", "true");
+            handle.addEventListener("mousedown", () => (card.draggable = true));
+            card.addEventListener("dragstart", (event) => {
+                dragged = card;
+                card.classList.add("dragging");
+                event.dataTransfer.effectAllowed = "move";
+                event.dataTransfer.setData("text/plain", String(widget.id));
+            });
+            card.addEventListener("dragend", () => {
+                card.draggable = false;
+                card.classList.remove("dragging");
+                dragged = null;
+                clearDropMarks();
+            });
+
             const up = make("button", { type: "button", className: "outline-button", textContent: "↑", disabled: index === 0, title: "Naikkan" });
+            up.dataset.move = "up";
             up.setAttribute("aria-label", `Naikkan ${widget.title}`);
-            up.addEventListener("click", () => swapOrder(widget, -1));
+            up.addEventListener("click", () => moveBy(widget, -1));
 
             const down = make("button", { type: "button", className: "outline-button", textContent: "↓", disabled: index === dashboard.widgets.length - 1, title: "Turunkan" });
+            down.dataset.move = "down";
             down.setAttribute("aria-label", `Turunkan ${widget.title}`);
-            down.addEventListener("click", () => swapOrder(widget, 1));
+            down.addEventListener("click", () => moveBy(widget, 1));
 
             const width = selectOf(WIDTHS, widget.width, `Lebar ${widget.title}`);
             width.addEventListener("change", async () => {
@@ -275,7 +348,7 @@ export function initDashboardEditor(root, view) {
                 response.ok ? reloadInEditMode() : showError(response);
             });
 
-            controls.append(up, down, width, edit, remove);
+            controls.append(handle, up, down, width, edit, remove);
             parts.card.append(controls);
         });
     };

@@ -1701,3 +1701,40 @@ form + .section-title,
     padding: 6px 10px;
     font-size: 12px;
 }
+
+/* ===== Drag and drop widget ===== */
+.drag-handle {
+    cursor: grab;
+    user-select: none;
+    padding: 6px 10px;
+    border: 1px dashed var(--border-strong);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.widget-card.dragging {
+    opacity: 0.45;
+}
+
+.widget-card.drop-before {
+    box-shadow: -4px 0 0 0 var(--accent);
+}
+
+.widget-card.drop-after {
+    box-shadow: 4px 0 0 0 var(--accent);
+}
+
+.widget-card[style*="--span: 12"].drop-before,
+.widget-card[style*="--span:12"].drop-before {
+    box-shadow: 0 -4px 0 0 var(--accent);
+}
+
+.widget-card[style*="--span: 12"].drop-after,
+.widget-card[style*="--span:12"].drop-after {
+    box-shadow: 0 4px 0 0 var(--accent);
+}

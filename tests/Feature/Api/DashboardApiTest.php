@@ -148,6 +148,32 @@ class DashboardApiTest extends TestCase
         $this->assertSame(3, $widget->sort_order);
     }
 
+    public function test_widgets_are_reordered_in_one_request(): void
+    {
+        $dashboard = Dashboard::factory()->create();
+        [$a, $b, $c] = Widget::factory()->for($dashboard)->count(3)->sequence(['sort_order' => 1], ['sort_order' => 2], ['sort_order' => 3])->create();
+
+        $this->actingAs(User::factory()->admin()->create())
+            ->putJson("/api/dashboards/{$dashboard->id}/widgets/order", ['order' => [$c->id, $a->id, $b->id]])
+            ->assertOk();
+
+        $this->assertSame([$c->id, $a->id, $b->id], $dashboard->widgets()->pluck('id')->all());
+    }
+
+    public function test_reorder_must_contain_exactly_the_dashboards_widgets(): void
+    {
+        $dashboard = Dashboard::factory()->create();
+        [$a, $b] = Widget::factory()->for($dashboard)->count(2)->create();
+        $other = Widget::factory()->create();
+        $this->actingAs(User::factory()->admin()->create());
+
+        $this->putJson("/api/dashboards/{$dashboard->id}/widgets/order", ['order' => [$a->id]])
+            ->assertJsonValidationErrors(['order' => 'Urutan harus memuat semua widget dashboard.']);
+
+        $this->putJson("/api/dashboards/{$dashboard->id}/widgets/order", ['order' => [$a->id, $other->id]])
+            ->assertJsonValidationErrors(['order.1' => 'Widget tidak ada di dashboard ini.']);
+    }
+
     public function test_deleting_dashboard_removes_its_widgets(): void
     {
         $widget = Widget::factory()->create();
