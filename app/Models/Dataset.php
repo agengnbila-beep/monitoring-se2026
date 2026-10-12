@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -40,6 +41,16 @@ class Dataset extends Model
     public function columns(): HasMany
     {
         return $this->hasMany(DatasetColumn::class)->orderBy('position');
+    }
+
+    public function latestRevision(): HasOne
+    {
+        return $this->hasOne(DatasetRevision::class)->latestOfMany();
+    }
+
+    public function revisions(): HasMany
+    {
+        return $this->hasMany(DatasetRevision::class)->latest('id');
     }
 
     public function savedQueries(): HasMany

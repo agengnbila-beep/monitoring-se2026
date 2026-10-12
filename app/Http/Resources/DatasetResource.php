@@ -26,6 +26,7 @@ class DatasetResource extends JsonResource
             'error_message' => $this->error_message,
             'row_count' => $this->row_count,
             'column_count' => $this->column_count,
+            'update_status' => $this->whenLoaded('latestRevision', fn () => $this->latestRevision?->status),
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

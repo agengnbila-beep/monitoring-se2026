@@ -108,7 +108,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     window.location.href = JSON.parse(xhr.responseText).redirect;
                 } else if (xhr.status === 422) {
                     const errors = JSON.parse(xhr.responseText).errors || {};
-                    showError((errors.file || ["Upload tidak valid."])[0]);
+                    showError(Object.values(errors).flat()[0] || "Upload tidak valid.");
                 } else if (xhr.status === 413) {
                     showError("File terlalu besar untuk batas server.");
                 } else if (xhr.status === 419) {
@@ -138,7 +138,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const datasetList = document.getElementById("datasetList");
 
-    if (datasetList && datasetList.querySelector('[data-status="pending"], [data-status="processing"]')) {
+    const busySelector = '[data-status="pending"], [data-status="processing"], [data-update-status="pending"], [data-update-status="processing"]';
+
+    if (datasetList && datasetList.querySelector(busySelector)) {
         const poll = function () {
             fetch(datasetList.dataset.pollUrl, { headers: { Accept: "application/json" } })
                 .then(function (response) {
@@ -148,7 +150,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     const changed = body.data.some(function (dataset) {
                         const card = datasetList.querySelector('[data-dataset-id="' + dataset.id + '"]');
 
-                        return card && card.dataset.status !== dataset.status;
+                        return card && (card.dataset.status !== dataset.status || (card.dataset.updateStatus || null) !== (dataset.update_status ?? null));
                     });
 
                     if (changed) {

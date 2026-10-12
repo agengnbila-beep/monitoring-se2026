@@ -15,7 +15,7 @@ class DatasetController extends Controller
 {
     public function index(): AnonymousResourceCollection
     {
-        return DatasetResource::collection(Dataset::latest()->get());
+        return DatasetResource::collection(Dataset::with('latestRevision')->latest()->get());
     }
 
     public function profile(Dataset $dataset): JsonResponse

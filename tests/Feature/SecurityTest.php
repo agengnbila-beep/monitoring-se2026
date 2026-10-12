@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Dataset;
+use App\Models\DatasetRevision;
 use App\Models\QueryFolder;
 use App\Models\SavedQuery;
 use App\Models\User;
@@ -128,6 +129,7 @@ class SecurityTest extends TestCase
             'widget' => $widget->id,
             'key' => 'kecamatan',
             'folder' => QueryFolder::factory()->create()->id,
+            'revision' => DatasetRevision::factory()->create()->id,
         ];
     }
 

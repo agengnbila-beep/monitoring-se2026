@@ -11,6 +11,7 @@ use App\Http\Controllers\Auth\LoginController as AuthLoginController;
 use App\Http\Controllers\DashboardPageController;
 use App\Http\Controllers\DatasetColumnController;
 use App\Http\Controllers\DatasetController;
+use App\Http\Controllers\DatasetRevisionController;
 use App\Http\Controllers\QueryPageController;
 use App\Http\Controllers\SqlPageController;
 use Illuminate\Support\Facades\Route;
@@ -39,7 +40,15 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('can:admin')->group(function () {
         Route::get('/data', [DatasetController::class, 'index'])->name('data');
+        Route::get('/data/baru', [DatasetController::class, 'create'])->name('data.create');
         Route::post('/data/upload', [DatasetController::class, 'store'])->name('data.upload');
+
+        Route::get('/data/update', [DatasetRevisionController::class, 'create'])->name('data.revisions.create');
+        Route::post('/data/update', [DatasetRevisionController::class, 'store'])->name('data.revisions.store');
+        Route::get('/data/update/{revision}', [DatasetRevisionController::class, 'preview'])->name('data.revisions.preview');
+        Route::post('/data/update/{revision}/confirm', [DatasetRevisionController::class, 'confirm'])->name('data.revisions.confirm');
+        Route::delete('/data/update/{revision}', [DatasetRevisionController::class, 'destroy'])->name('data.revisions.destroy');
+
         Route::get('/data/{dataset}/preview', [DatasetController::class, 'preview'])->name('data.preview');
         Route::post('/data/{dataset}/confirm', [DatasetController::class, 'confirm'])->name('data.confirm');
         Route::get('/data/{dataset}', [DatasetController::class, 'show'])->name('data.show');

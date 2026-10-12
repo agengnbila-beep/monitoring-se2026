@@ -22,6 +22,8 @@
             </p>
         </div>
 
+        <div class="dashboard-toolbar">
+        <a href="{{ route('data.revisions.create', ['dataset' => $dataset->id]) }}" class="outline-button button-link-outline">Perbarui data</a>
         <form method="POST" action="{{ route('data.destroy', $dataset) }}"
             data-confirm-title="Hapus dataset" data-confirm-label="Hapus"
             data-confirm="Dataset &quot;{{ $dataset->name }}&quot; beserta seluruh datanya akan dihapus.">
@@ -29,6 +31,7 @@
             @method('DELETE')
             <button type="submit" class="cancel-button">Hapus Dataset</button>
         </form>
+        </div>
 
     </div>
 
@@ -108,6 +111,27 @@
 
         <button type="submit" class="upload-button">Simpan Perubahan Kolom</button>
     </form>
+
+    @if ($revisions->isNotEmpty())
+        <h2 class="section-title">Riwayat pembaruan</h2>
+        <div class="table-scroll">
+            <table class="preview-table">
+                <thead><tr><th>File</th><th>Status</th><th>Kolom baru</th><th>Kolom hilang</th><th>Oleh</th><th>Waktu</th></tr></thead>
+                <tbody>
+                    @foreach ($revisions as $revision)
+                        <tr>
+                            <td title="{{ $revision->original_filename }}">{{ $revision->original_filename }}</td>
+                            <td>@include('data.revisions._status', ['revision' => $revision])</td>
+                            <td>{{ implode(', ', $revision->columns_added ?? []) ?: '—' }}</td>
+                            <td>{{ implode(', ', $revision->columns_removed ?? []) ?: '—' }}</td>
+                            <td>{{ $revision->creator?->name ?? '—' }}</td>
+                            <td>{{ $revision->created_at->translatedFormat('d M Y H:i') }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
 
     <h2 class="section-title">Pratinjau {{ $rows->count() }} baris pertama</h2>
 

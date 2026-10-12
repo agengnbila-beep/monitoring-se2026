@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\DatasetFileRequest;
 use App\Jobs\ImportDataset;
 use App\Models\Dataset;
 use App\Services\Import\DatasetPreview;
@@ -22,25 +23,24 @@ class DatasetController extends Controller
     public function index(): View
     {
         return view('data.index', [
-            'datasets' => Dataset::latest()->get(),
+            'datasets' => Dataset::with('latestRevision')->latest()->get(),
         ]);
+    }
+
+    /**
+     * Sub-menu "Data baru": upload dataset baru.
+     */
+    public function create(): View
+    {
+        return view('data.create');
     }
 
     /**
      * Form upload memakai XHR (agar ada progress bar) dan meminta JSON;
      * tanpa JavaScript, form biasa tetap berfungsi lewat redirect.
      */
-    public function store(Request $request): RedirectResponse|JsonResponse
+    public function store(DatasetFileRequest $request): RedirectResponse|JsonResponse
     {
-        $request->validate([
-            'file' => ['required', 'file', 'extensions:csv,xlsx,json', 'max:20480'],
-        ], [
-            'file.required' => 'Pilih file yang akan diupload.',
-            'file.uploaded' => 'File gagal diupload. Ukurannya mungkin melebihi batas server.',
-            'file.extensions' => 'Format file harus CSV, XLSX, atau JSON.',
-            'file.max' => 'Ukuran file maksimal 20 MB.',
-        ]);
-
         $file = $request->file('file');
         $type = strtolower($file->getClientOriginalExtension());
 
@@ -71,6 +71,7 @@ class DatasetController extends Controller
         $columns = $dataset->columns()->get();
 
         return view('data.show', [
+            'revisions' => $dataset->revisions()->with('creator:id,name')->take(5)->get(),
             'dataset' => $dataset,
             'columns' => $columns,
             'rows' => $dataset->previewRows($columns->pluck('name')->all()),
@@ -130,7 +131,7 @@ class DatasetController extends Controller
 
     public function destroy(Dataset $dataset): RedirectResponse
     {
-        if ($dataset->status === 'processing') {
+        if ($dataset->status === 'processing' || $dataset->revisions()->whereIn('status', ['pending', 'processing'])->exists()) {
             return back()->with('error', 'Dataset sedang diimpor, tunggu sampai selesai.');
         }
 
@@ -138,9 +139,10 @@ class DatasetController extends Controller
             return back()->with('error', 'Dataset tidak bisa dihapus karena masih dipakai saved query.');
         }
 
-        if ($dataset->file_path !== null) {
-            Storage::disk('local')->delete($dataset->file_path);
-        }
+        Storage::disk('local')->delete(array_filter([
+            $dataset->file_path,
+            ...$dataset->revisions()->pluck('file_path')->all(),
+        ]));
 
         if ($dataset->table_name !== null) {
             Schema::dropIfExists($dataset->table_name);

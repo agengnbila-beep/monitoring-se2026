@@ -49,6 +49,7 @@ class DatasetApiTest extends TestCase
                     'error_message' => 'File tidak berisi data.',
                     'row_count' => 0,
                     'column_count' => 0,
+                    'update_status' => null,
                     'created_at' => now()->toIso8601String(),
                 ]],
             ]);

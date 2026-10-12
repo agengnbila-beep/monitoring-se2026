@@ -17,6 +17,7 @@ Tanggal ISO 8601. Key `snake_case`.
       "error_message": null,
       "row_count": 115018,
       "column_count": 18,
+      "update_status": null,
       "created_at": "2026-10-05T10:00:00+07:00"
     }
   ]
@@ -25,6 +26,7 @@ Tanggal ISO 8601. Key `snake_case`.
 
 `status`: `uploaded` (file diterima, menunggu konfirmasi) | `pending` (antre import) | `processing` | `done` | `failed`.
 Frontend polling endpoint ini selama ada dataset `pending`/`processing`.
+`update_status`: status pembaruan data terakhir (Update data) — `uploaded` | `pending` | `processing` | `done` | `failed`, atau `null`.
 
 Profil dan pratinjau hanya tersedia untuk dataset `done`; selain itu HTTP 409 `{"message": "Dataset belum selesai diimpor."}`.
 

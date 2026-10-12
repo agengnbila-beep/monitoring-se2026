@@ -36,23 +36,45 @@
                 </a>
 
                 @can('admin')
-                    <a href="{{ route('data') }}" @class(['active' => request()->routeIs('data', 'data.*')])>
+                    @php
+                        $dataOpen = request()->routeIs('data', 'data.*');
+                        $analyticsOpen = request()->routeIs('analitik.*', 'queries.*', 'sql.*');
+                    @endphp
+
+                    {{-- Sub-menu hanya tampil saat induknya dibuka (diklik). --}}
+                    <a href="{{ route('data') }}" @class(['nav-parent', 'active' => request()->routeIs('data', 'data.show', 'data.preview'), 'open' => $dataOpen])
+                        aria-expanded="{{ $dataOpen ? 'true' : 'false' }}">
                         Data
                     </a>
 
-                    <a href="{{ route('analitik.index') }}" @class(['active' => request()->routeIs('analitik.*')])>
+                    @if ($dataOpen)
+                        <div class="nav-sub">
+                            <a href="{{ route('data.create') }}" @class(['active' => request()->routeIs('data.create')])>
+                                Data baru
+                            </a>
+
+                            <a href="{{ route('data.revisions.create') }}" @class(['active' => request()->routeIs('data.revisions.*')])>
+                                Update data
+                            </a>
+                        </div>
+                    @endif
+
+                    <a href="{{ route('analitik.index') }}" @class(['nav-parent', 'active' => request()->routeIs('analitik.*'), 'open' => $analyticsOpen])
+                        aria-expanded="{{ $analyticsOpen ? 'true' : 'false' }}">
                         Analitik
                     </a>
 
-                    <div class="nav-sub">
-                        <a href="{{ route('queries.builder') }}" @class(['active' => request()->routeIs('queries.*')])>
-                            Filter Data
-                        </a>
+                    @if ($analyticsOpen)
+                        <div class="nav-sub">
+                            <a href="{{ route('queries.builder') }}" @class(['active' => request()->routeIs('queries.*')])>
+                                Filter Data
+                            </a>
 
-                        <a href="{{ route('sql.index') }}" @class(['active' => request()->routeIs('sql.*')])>
-                            SQL
-                        </a>
-                    </div>
+                            <a href="{{ route('sql.index') }}" @class(['active' => request()->routeIs('sql.*')])>
+                                SQL
+                            </a>
+                        </div>
+                    @endif
                 @endcan
 
             </nav>

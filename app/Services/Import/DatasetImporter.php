@@ -24,37 +24,67 @@ class DatasetImporter
      */
     public function import(Dataset $dataset): void
     {
-        [$headers, $types] = $this->analyze($dataset);
-
-        $names = ColumnNamer::sanitize($headers);
         $table = 'ds_'.$dataset->id;
-
-        $this->createTable($table, $names, $types);
+        $result = $this->importFile($dataset->file_path, $dataset->file_type, $dataset->sheet_name, $table);
 
         $dataset->columns()->delete();
-        $dataset->columns()->createMany(array_map(fn (int $index) => [
-            'position' => $index + 1,
-            'name' => $names[$index],
-            'label' => $headers[$index] !== '' ? $headers[$index] : $names[$index],
-            'type' => $types[$index],
-        ], array_keys($names)));
-
-        $rowCount = $this->insertRows($dataset, $table, $names, $types);
+        $dataset->columns()->createMany($this->columnRows($result));
 
         $dataset->update([
             'table_name' => $table,
-            'row_count' => $rowCount,
-            'column_count' => count($names),
+            'row_count' => $result['row_count'],
+            'column_count' => count($result['names']),
         ]);
+    }
+
+    /**
+     * Impor satu file (di disk `local`) ke tabel baru bernama $table.
+     * Dipakai juga untuk pembaruan data, yang mengimpor ke tabel sementara
+     * lebih dulu sebelum ditukar dengan tabel lama.
+     *
+     * @return array{headers: list<string>, names: list<string>, types: list<string>, row_count: int}
+     */
+    public function importFile(string $path, string $type, ?string $sheet, string $table): array
+    {
+        $rows = fn () => ReaderFactory::make(Storage::disk('local')->path($path), $type, $sheet)->rows();
+
+        [$headers, $types] = $this->analyze($rows());
+        $names = ColumnNamer::sanitize($headers);
+
+        $this->createTable($table, $names, $types);
+
+        return [
+            'headers' => $headers,
+            'names' => $names,
+            'types' => $types,
+            'row_count' => $this->insertRows($rows(), $table, $names, $types),
+        ];
+    }
+
+    /**
+     * Baris `dataset_columns` dari hasil import. Label yang sudah diubah
+     * pengguna untuk kolom yang sama dipertahankan ($labels: name => label).
+     *
+     * @param  array{headers: list<string>, names: list<string>, types: list<string>, row_count: int}  $result
+     * @param  array<string, string>  $labels
+     * @return list<array{position: int, name: string, label: string, type: string}>
+     */
+    public function columnRows(array $result, array $labels = []): array
+    {
+        return array_map(fn (int $index) => [
+            'position' => $index + 1,
+            'name' => $result['names'][$index],
+            'label' => $labels[$result['names'][$index]]
+                ?? ($result['headers'][$index] !== '' ? $result['headers'][$index] : $result['names'][$index]),
+            'type' => $result['types'][$index],
+        ], array_keys($result['names']));
     }
 
     /**
      * @return array{0: list<string>, 1: list<string>}
      */
-    private function analyze(Dataset $dataset): array
+    private function analyze(Generator $rows): array
     {
-        $rows = $this->rows($dataset);
-
         if (! $rows->valid()) {
             throw new RuntimeException('File tidak berisi data.');
         }
@@ -94,14 +124,12 @@ class DatasetImporter
      * @param  list<string>  $names
      * @param  list<string>  $types
      */
-    private function insertRows(Dataset $dataset, string $table, array $names, array $types): int
+    private function insertRows(Generator $rows, string $table, array $names, array $types): int
     {
         $chunkSize = max(1, min(self::MAX_CHUNK_ROWS, intdiv(self::MAX_BINDINGS, count($names))));
         $columnCount = count($names);
         $rowCount = 0;
         $buffer = [];
-
-        $rows = $this->rows($dataset);
 
         for ($rows->next(); $rows->valid(); $rows->next()) {
             $values = array_pad(array_slice($rows->current(), 0, $columnCount), $columnCount, null);
@@ -151,14 +179,5 @@ class DatasetImporter
             'decimal' => (float) $value,
             default => is_bool($value) ? (string) (int) $value : (string) $value,
         };
-    }
-
-    private function rows(Dataset $dataset): Generator
-    {
-        return ReaderFactory::make(
-            Storage::disk('local')->path($dataset->file_path),
-            $dataset->file_type,
-            $dataset->sheet_name,
-        )->rows();
     }
 }
